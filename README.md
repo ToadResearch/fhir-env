@@ -12,14 +12,17 @@ Patient splits are **720 train / 80 dev / 200 public / 268 heldout**. Packaged e
 
 | Area | Examples | Operations |
 |---|---|---|
-| Clinical search | Corrected lab results, serial measurements, order → report → imaging study | R |
-| Nursing | Measured weight and visit closure; uncertain reported allergy | R → C/U |
-| Medications and laboratory | Supply versus administration; refill routing; rejected-specimen recollection | R → C |
-| Referrals | Discover linked evidence, check acknowledgement, complete follow-up and log it | R → U/C |
-| Scheduling | Reschedule or cancel while releasing/reserving capacity atomically | R → U |
-| Registration and insurance | Verified contact changes, coverage transitions, date-specific eligibility | R → C/U |
-| Billing and records | Duplicate charge correction; consent-scope review; authorized duplicate draft removal | R → U/D |
-| Evidence collection | Documented prerequisites and gaps against a fictional prior-auth policy | R |
+| [Clinical search](docs/tasks/clinical-search.md) | Latest valid results, serial measurements, order → report → imaging study | R |
+| [Nursing](docs/tasks/nursing.md) | Measured weight and visit closure; uncertain reported allergy | R → C/U |
+| [Medications](docs/tasks/medications.md) | Supply versus administration; refill routing | R / R → C |
+| [Laboratory](docs/tasks/laboratory.md) | Corrected results; rejected-specimen recollection | R / R → C |
+| [Referrals](docs/tasks/referrals.md) | Discover linked evidence, check acknowledgement, complete follow-up and log it | R → U/C |
+| [Scheduling](docs/tasks/scheduling.md) | Reschedule or cancel while releasing/reserving capacity atomically | R → U |
+| [Registration](docs/tasks/registration.md) | Verified contact changes; interpreter handoff | R → C/U |
+| [Insurance](docs/tasks/insurance.md) | Coverage transitions; date-specific eligibility | R / R → C/U |
+| [Billing](docs/tasks/billing.md) | Duplicate charge correction; authorized duplicate draft removal | R → U/D |
+| [Records](docs/tasks/records.md) | Consent-scope review; records-release preparation | R → C/D |
+| [Evidence collection](docs/tasks/evidence-collection.md) | Documented prerequisites and gaps against a fictional prior-auth policy | R |
 
 Patient reports, delivery, dispensing, acknowledgement and confirmed observations remain distinct. Missing records support “not documented,” rather than an invented clinical conclusion. Clinical cancellations preserve history through status changes; literal deletion is limited to authorized duplicate drafts.
 
@@ -27,7 +30,7 @@ Patient reports, delivery, dispensing, acknowledgement and confirmed observation
 
 `discovery_variants=true` adds **838 train and 89 dev cases in three additional families**, using the same charts and original allowed mutations. The agent must discover secondary references rather than receive their business identifiers. These variants include referral closure, atomic acknowledgement logging plus Task completion, and insurance/account checks before draft-claim deletion. Their declared discovery depth is four; includes, chaining and joins may combine calls.
 
-The original 37 families remain available by default. See [the current design](docs/benchmark-design.md) and [dev discovery examples](artifacts/benchmark-v0.3.1/dev-discovery-examples.json).
+The original 37 families remain available by default. See [the current design](docs/benchmark-design.md), [referral discovery examples](docs/tasks/referrals.md), and [billing discovery examples](docs/tasks/billing.md).
 
 ## Tools and metrics
 
@@ -48,7 +51,7 @@ python -m pytest tests -q
 - [Environment setup, loader arguments and tool contract](environments/fhir_workflows/README.md)
 - [Metric definitions and checkpoint analysis](docs/metrics-and-evaluation.md)
 - [Resource generation and workflow taxonomy](docs/benchmark-v0.3.0.md)
-- [Concrete clinical and clerical review examples](artifacts/benchmark-v0.3.0/clinical-review-pack.md)
+- [Browse task examples by workflow area](#data-and-workflows)
 - [Data card and provenance](docs/dataset-card.md)
 
 Clinical expert review and independent full FHIR/server conformance validation remain outstanding. Reference replay verifies the environment's specified tasks; it does not measure trained-agent capability.
