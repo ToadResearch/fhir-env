@@ -19,7 +19,7 @@ max_completion_tokens = 2048
 [[orchestrator.train.source]]
 name = "fhir-rest-train"
 env.id = "fhir-workflows"
-env.args = { split = "train", eval_split = "dev", query_mode = "rest", max_depth = 2, efficiency_weight = 0.0 }
+env.args = { split = "train", eval_split = "dev", query_mode = "rest", discovery_variants = true, max_depth = 2, efficiency_weight = 0.0 }
 
 [orchestrator.eval]
 interval = 10
@@ -31,7 +31,7 @@ max_completion_tokens = 2048
 name = "fhir-rest-dev"
 select.limit = 200
 env.id = "fhir-workflows"
-env.args = { split = "train", eval_split = "dev", query_mode = "rest", max_depth = 4, efficiency_weight = 0.0 }
+env.args = { split = "train", eval_split = "dev", query_mode = "rest", discovery_variants = true, max_depth = 4, efficiency_weight = 0.0 }
 
 [trainer.optim]
 lr = 3e-6

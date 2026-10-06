@@ -1,8 +1,8 @@
 [project]
 name = "fhir-workflows"
-description = "Synthetic FHIR R4 retrieval and verified chart-workflow benchmark"
+description = "FHIR Query RL: reinforcement learning for EHR search and full CRUD"
 tags = ["healthcare", "fhir", "tool-use", "train", "eval"]
-version = "0.3.0"
+version = "0.3.1"
 requires-python = ">=3.12"
 dependencies = [
     "verifiers==0.2.2.dev6",
@@ -11,7 +11,11 @@ dependencies = [
     "sqlglot>=30,<31",
 ]
 
+[project.optional-dependencies]
+analysis = ["matplotlib>=3.9,<4"]
+
 [project.scripts]
+fhir-query-rl = "fhir_workflows.cli:main"
 fhir-workflows = "fhir_workflows.cli:main"
 
 [build-system]

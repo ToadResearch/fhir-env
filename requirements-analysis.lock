@@ -1,0 +1,9 @@
+# Optional checkpoint plotting dependencies verified locally.
+-r requirements-dev.lock
+matplotlib==3.11.2
+contourpy==1.4.0
+cycler==0.12.1
+fonttools==4.66.1
+kiwisolver==1.5.1
+pillow==12.3.0
+pyparsing==3.3.3

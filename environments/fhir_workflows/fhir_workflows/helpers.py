@@ -12,6 +12,7 @@ from .validation import schema, validate_resource
 
 def output(store, name, payload):
     encoded = json.dumps(payload, ensure_ascii=False)
+    store.observe_response_terms(encoded)
     store.assistance.append(
         {"tool": name, "round": store.round, "bytes": len(encoded.encode())}
     )

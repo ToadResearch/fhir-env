@@ -7,10 +7,10 @@ tags:
 - reinforcement-learning
 task_categories:
 - question-answering
-pretty_name: FHIR Workflows prototype
+pretty_name: FHIR Query RL
 ---
 
-# FHIR Workflows dataset card (draft; unpublished)
+# FHIR Query RL dataset card (draft; unpublished)
 
 This v0.3.0 version contains 1,268 Synthetic Hospital patients expanded with explicitly fictional FHIR R4 workflow episodes. It retains original notes and explicit profiles. Generated names, dates of birth, identifiers, providers, administrative records and clinical workflow facts are distinguished by metadata tags and a sidecar ledger. Synthetic Hospital already has a FHIR simulator; this derivative adds transactional workflow graphs and a new deterministic task compiler.
 
@@ -28,7 +28,7 @@ The in-process environment supports a documented FHIR REST subset, isolated writ
 
 Validation includes the official FHIR R4 4.0.1 JSON schema, local reference/patient integrity, deterministic compilation, automated reference traces and negative verifier tests. It does not yet include the official Java validator's complete FHIRPath/terminology checks, US Core conformance, independent HAPI/server replay, clinician review, actual trained-agent performance, privacy deployment validation, or a compliant Da Vinci authorization exchange. SQL projections are experimental and do not claim SQL on FHIR conformance.
 
-Adaption-generated workflow proposals are a quarantined experiment and are not part of scoring truth or the released compiled corpus. See the separate experiment report for coverage, parseability, semantic failures, cost and export artifacts.
+The local v0.3.1 environment optionally appends 838 train and 89 dev discovery tasks in three families. They use these same resources and splits, retain the original allowed mutations, and add evidence/answer fields read from the frozen chart. Base corpus counts and checksums remain unchanged. See [the current design](benchmark-design.md) and [evaluation protocol](metrics-and-evaluation.md).
 
 Intended use is synthetic research on EHR retrieval and requested chart changes. Do not use for patient care, diagnosis/treatment decisions or autonomous insurance decisions. Local retrieval does not guarantee that information forwarded to a cloud model is free of PHI in a future real-EHR setting.
 

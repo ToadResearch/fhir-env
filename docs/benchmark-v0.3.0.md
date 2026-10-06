@@ -1,4 +1,4 @@
-# FHIR Workflows v0.3: clinical and administrative episodes
+# FHIR Query RL: v0.3.0 clinical and administrative corpus
 
 This revision expands the same 1,268 Synthetic Hospital patients into a broader **research benchmark for chart retrieval and explicitly authorized chart work**. No training is launched by this revision. The generator, verifier and local environment are implemented; clinical review and independent FHIR server testing remain outstanding.
 
@@ -80,6 +80,10 @@ Conditional prompts present both possible actions and require reading the chart 
 
 Write contracts are deliberately structured to make exact state verification reproducible. Many still specify canonical wording and fields. They do not establish general natural-language clinical reasoning, semantic equivalence of arbitrary notes, or performance on unseen workflow designs. Success requires the expected answer, retrieved evidence, correct complete state and acceptable mutation history. Query character length is diagnostic only; longer queries are not intrinsically better.
 
+## Additive environment v0.3.1
+
+The original 37-family corpus remains frozen. Optional `discovery_variants=true` adds 838 train / 89 dev tasks in three families, retaining the same charts and original write contracts. Secondary identifiers are withheld from requests so the agent discovers referral order/report/study and draft-claim coverage/account relationships. These cases have declared depth four and include R, RU, CRU and RD branches. Their additional answer fields and evidence come directly from the frozen resources; no new clinical facts are generated. [The current design](benchmark-design.md) describes these cases, and [the metric protocol](metrics-and-evaluation.md) specifies checkpoint curves by difficulty and CRUD mix.
+
 ## Evaluation protocol
 
 Report macro-averaged success by family and domain as well as patient-clustered results. Separate read, create, update, delete and mixed workflows; missing-information branches; and supplied-ID versus discovery cases. Compare paired patient/task snapshots across raw REST, assisted REST and experimental SQL. Measure first/all evidence calls and rounds, failed queries, primitive operations, bytes returned and final state correctness. Count failures as censored search outcomes rather than dropping them from efficiency plots.
@@ -91,10 +95,10 @@ Before making clinical deployment claims: clinician and clerical review of sampl
 ## Reproduce
 
 ```bash
-.venv/bin/fhir-workflows build --source-db sources/hospital/benchmark_v1.3.db --output data/synthetic-hospital-v0.3.0
+.venv/bin/fhir-query-rl build --source-db sources/hospital/benchmark_v1.3.db --output data/synthetic-hospital-v0.3.0
 .venv/bin/python -m pytest tests -q
-.venv/bin/fhir-workflows validate data/synthetic-hospital-v0.3.0 --split train
-.venv/bin/fhir-workflows validate data/synthetic-hospital-v0.3.0 --split dev
+.venv/bin/fhir-query-rl validate data/synthetic-hospital-v0.3.0 --split train
+.venv/bin/fhir-query-rl validate data/synthetic-hospital-v0.3.0 --split dev
 .venv/bin/python scripts/benchmark_report.py data/synthetic-hospital-v0.3.0 --output artifacts/benchmark-v0.3.0
 .venv/bin/python scripts/package_training_data.py --source data/synthetic-hospital-v0.3.0
 ```

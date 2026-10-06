@@ -466,7 +466,7 @@ def main() -> None:
     totals = coverage["totals"]
     breadth = coverage["per_patient"]
     report = [
-        f"# FHIR workflows {manifest['version']} coverage",
+        f"# FHIR Query RL corpus {manifest['version']} coverage",
         "",
         f"The compiled snapshot contains **{totals['patients']:,} patients**, "
         f"**{totals['tasks']:,} task instances across {totals['distinct_families']} families**, "

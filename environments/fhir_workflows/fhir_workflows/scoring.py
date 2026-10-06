@@ -350,7 +350,11 @@ def evaluate_training(
     ):
         metrics[name + "_observed"] = metrics[name] if metrics[name] is not None else -1
     features = [
-        e.get("query_features", {}) for e in store.events if e["route"] != "context"
+        e.get("query_features", {})
+        for e in store.events
+        if e["route"] in {"rest", "sql"}
+        and e["method"] in {"GET", "SELECT"}
+        and e["query"] != "metadata"
     ]
     for name in (
         "characters",
@@ -365,4 +369,7 @@ def evaluate_training(
             sum(values) / len(values) if values else 0.0
         )
         metrics["query_" + name + "_max"] = max(values, default=0)
+    from .metrics import search_behavior
+
+    metrics.update(search_behavior(task, store))
     return metrics

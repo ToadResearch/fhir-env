@@ -105,7 +105,7 @@ def test_no_shaping_for_unread_answers_wrong_patients_or_id_only_sql():
     target = task["gold"]["evidence"][0]
     query(
         store,
-        f"SELECT resource_ref FROM observations WHERE resource_ref='{target}' LIMIT 1",
+        f"SELECT resource_ref FROM Observation WHERE resource_ref='{target}' LIMIT 1",
     )
     assert evaluate_training(task, store, "{}", retrieval_weight=0.2)["reward"] == 0
 

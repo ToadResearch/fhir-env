@@ -347,7 +347,11 @@ def query(store, sql):
             "primitive_operations": 1,
         }
     )
-    from .metrics import query_features
+    from .metrics import filter_terms, query_features
 
     store.events[-1]["query_features"] = query_features(store.events[-1])
+    store.events[-1]["filter_terms_not_previously_observed"] = sorted(
+        filter_terms(store.events[-1]) - store.observed_terms
+    )
+    store.observe_response_terms(json.dumps(result))
     return result

@@ -12,6 +12,7 @@ from jsonschema import ValidationError, validate
 
 from .dataset import load_jsonl
 from .helpers import HELPERS
+from .metrics import rollout_usage_metrics, task_dimensions
 from .protocol import ACTION_INSTRUCTIONS, is_final, parse_object
 from .scoring import evaluate_training
 from .sql import SCHEMA, query
@@ -157,6 +158,12 @@ class FhirWorkflowEnv(vf.StatefulToolEnv):
             delete_refs=task["delete_refs"],
             writable_refs=task.get("writable_refs", ()),
         )
+        for message in state.get("prompt", []):
+            content = (
+                message.get("content") if isinstance(message, dict) else message.content
+            )
+            if isinstance(content, str):
+                state["fhir_store"].observe_response_terms(content)
         if self.tool_profile == "none":
             visible = context_resources(resources, task["patient_id"])
             for resource in visible:
@@ -262,6 +269,7 @@ def load_environment(
     answer_mode: str = "strict",
     retrieval_weight: float = 0.0,
     demonstrations: bool = False,
+    discovery_variants: bool = False,
     **kwargs,
 ) -> vf.Environment:
     """Load the pilot or compiled full dataset. Use dev for tuning and freeze
@@ -314,9 +322,16 @@ def load_environment(
         path = root / which / "tasks.jsonl"
         if not path.is_file():
             raise ValueError(f"Missing compiled split {which!r}: {path}")
+        candidates = load_jsonl(path)
+        if discovery_variants:
+            from .discovery import add_discovery_variants
+
+            candidates = add_discovery_variants(
+                candidates, lambda t: read_shard(str(root / t["shard"]))
+            )
         tasks = [
             t
-            for t in load_jsonl(path)
+            for t in candidates
             if t["dependency_depth"] <= max_depth
             and (family is None or t["family"] == family)
             and (families is None or t["family"] in families)
@@ -368,6 +383,12 @@ def load_environment(
                         "task_id": t["id"],
                         "family": t["family"],
                         "dependency_depth": t["dependency_depth"],
+                        "patient_id": t["patient_id"],
+                        "split": t["split"],
+                        "domain": t.get("domain", "legacy"),
+                        "role": t.get("role", "unspecified"),
+                        "information_regime": t.get("information_regime", "baseline"),
+                        **task_dimensions(t),
                     },
                 }
                 for t in tasks
@@ -387,6 +408,7 @@ def load_environment(
             retrieval_weight,
         )
         metrics["action_format_errors"] = state.get("action_format_errors", 0)
+        metrics.update(rollout_usage_metrics(state.get("trajectory", [])))
         state["fhir_metrics"] = metrics
         state["fhir_trace"] = state["fhir_store"].events
         state["fhir_assistance"] = state["fhir_store"].assistance
@@ -421,6 +443,40 @@ def load_environment(
         "first_evidence_round_observed",
         "all_evidence_call_observed",
         "all_evidence_round_observed",
+        "retrieval_hops",
+        "workflow_depth",
+        "required_evidence_resources",
+        "read_calls",
+        "write_calls",
+        "committed_mutations",
+        "unique_read_resources",
+        "non_gold_read_resources",
+        "cross_patient_read_resources",
+        "search_calls",
+        "search_rounds",
+        "first_action_targeted_search",
+        "first_action_broad_search",
+        "first_action_document_read",
+        "first_turn_targeted_search",
+        "first_search_gold_resource_hit",
+        "first_search_required_fields_hit",
+        "first_turn_gold_resource_hit",
+        "first_turn_required_fields_hit",
+        "unique_resources_per_search_mean",
+        "backend_resources_per_search_mean",
+        "gold_resource_search_hit_rate",
+        "repeated_queries",
+        "distinct_filter_terms",
+        "novel_filter_terms",
+        "filter_novelty_observed",
+        "model_turns",
+        "token_usage_complete",
+        "token_usage_call_coverage",
+        "model_input_tokens",
+        "model_output_tokens",
+        "model_total_tokens",
+        "observed_model_input_tokens",
+        "observed_model_output_tokens",
     ]
     names += [
         f"query_{feature}_{stat}"
@@ -445,6 +501,7 @@ def load_environment(
                 answer_mode,
                 retrieval_weight,
             )
+            metrics.update(rollout_usage_metrics(state.get("trajectory", [])))
             return metrics.get(name, state.get(name, 0))
 
         monitor.__name__ = name

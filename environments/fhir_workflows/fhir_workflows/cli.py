@@ -55,7 +55,7 @@ def replay_task(root, task):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Compile and verify synthetic FHIR workflows"
+        description="Compile and verify the FHIR Query RL search and CRUD benchmark"
     )
     commands = parser.add_subparsers(dest="command", required=True)
     build = commands.add_parser("build")
@@ -67,6 +67,7 @@ def main():
     validate.add_argument("--split", default="dev")
     validate.add_argument("--limit", type=int, default=0)
     validate.add_argument("--traces")
+    validate.add_argument("--discovery-variants", action="store_true")
     args = parser.parse_args()
     if args.command == "build":
         print(
@@ -81,6 +82,12 @@ def main():
         for path in (root / args.split / "shards").glob("*.ndjson"):
             validate_graph(load_jsonl(path))
         tasks = load_jsonl(root / args.split / "tasks.jsonl")
+        if args.discovery_variants:
+            from .discovery import add_discovery_variants
+
+            tasks = add_discovery_variants(
+                tasks, lambda t: load_jsonl(root / t["shard"])
+            )
         if args.limit:
             tasks = tasks[: args.limit]
         traces = [replay_task(root, t) for t in tasks]

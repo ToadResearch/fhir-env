@@ -1,34 +1,54 @@
-# FHIR Workflows
+# FHIR Query RL
 
-A synthetic EHR search and CRUD research benchmark, packaged as a Prime Intellect/Verifiers environment. The local environment and expanded corpus are v0.3.0; the previously published environment remains v0.2.5. This pass focuses on benchmark/environment design and launches no training. See [the v0.3 design and research](docs/benchmark-v0.3.0.md). Start with [the benchmark design](docs/benchmark-design.md), [tools and ablations](docs/tools-and-ablations.md), and [training status](docs/training-status.md).
+A synthetic EHR benchmark and **Verifiers/PrimeRL environment** for reinforcement learning of FHIR R4 search and **create, read, update and delete** operations. The immediate research question is whether RL improves accurate, efficient querying and requested chart changes. The long-term goal is a general EHR search agent.
 
-The environment was created with `prime env init fhir-workflows --multi-file`. It includes a source-preserving compiler, authored longitudinal episodes, an artificial infrastructure pilot, isolated CRUD operations, deterministic reference traces, and evidence/state verification. Optional helpers find patients, inspect FHIR fields, decode documents, build timeline indexes, and prepare updates. Raw and assisted profiles support matched tool ablations; a literal no-tools supplied-chart control supports three read-only families.
+This extends the existing benchmark and preserves its CRUD tasks. The current environment is **v0.3.1**, over the frozen **v0.3.0 corpus**. Development is local; no training or external publication is part of this revision. The Python package and loader retain `fhir_workflows` for compatibility; the CLI also exposes `fhir-query-rl`.
+
+## Data and workflows
+
+The [Synthetic Hospital](https://github.com/sparkcpark/synthetic_hospital) expansion contains **1,268 patients**, **50 FHIR resource types**, **139,109 resources excluding Provenance**, and **34,433 tasks in 37 families**. All 5,602 source notes and original profiles are preserved. Authored, seeded episodes add linked longitudinal clinical and administrative records, age-eligible narratives, timestamps, omissions and distractors.
+
+Patient splits are **720 train / 80 dev / 200 public / 268 heldout**. Packaged environment data contains train/dev only. Task counts are correlated instances of shared templates; patient holdout does not establish unseen-workflow generalization.
+
+| Area | Examples | Operations |
+|---|---|---|
+| Clinical search | Corrected lab results, serial measurements, order → report → imaging study | R |
+| Nursing | Measured weight and visit closure; uncertain reported allergy | R → C/U |
+| Medications and laboratory | Supply versus administration; refill routing; rejected-specimen recollection | R → C |
+| Referrals | Discover linked evidence, check acknowledgement, complete follow-up and log it | R → U/C |
+| Scheduling | Reschedule or cancel while releasing/reserving capacity atomically | R → U |
+| Registration and insurance | Verified contact changes, coverage transitions, date-specific eligibility | R → C/U |
+| Billing and records | Duplicate charge correction; consent-scope review; authorized duplicate draft removal | R → U/D |
+| Evidence collection | Documented prerequisites and gaps against a fictional prior-auth policy | R |
+
+Patient reports, delivery, dispensing, acknowledgement and confirmed observations remain distinct. Missing records support “not documented,” rather than an invented clinical conclusion. Clinical cancellations preserve history through status changes; literal deletion is limited to authorized duplicate drafts.
+
+## Multi-hop extension
+
+`discovery_variants=true` adds **838 train and 89 dev cases in three additional families**, using the same charts and original allowed mutations. The agent must discover secondary references rather than receive their business identifiers. These variants include referral closure, atomic acknowledgement logging plus Task completion, and insurance/account checks before draft-claim deletion. Their declared discovery depth is four; includes, chaining and joins may combine calls.
+
+The original 37 families remain available by default. See [the current design](docs/benchmark-design.md) and [dev discovery examples](artifacts/benchmark-v0.3.1/dev-discovery-examples.json).
+
+## Tools and metrics
+
+Compare raw FHIR with five optional helpers on identical frozen tasks. Experimental read-only SQL uses the same resources, with FHIR handling writes. A supplied-chart no-tools control covers three read-only families.
+
+Strict success requires a correct answer, retrieval of required evidence fields, and exactly the requested mutations. Ordinary correctness checks retain patient scope, ETags, atomicity, preserved fields and mutation history. Default reward has no retrieval shaping or efficiency bonus.
+
+Metrics record first/all evidence access, model turns and actual API tokens, backend work, opening search behavior, filter novelty, records returned per search and query structure. Offline analysis groups frozen checkpoint evaluations by hop bin, CRUD mix and family, with patient-cluster confidence intervals and explicit censoring/missingness. It can draw the proposed colored difficulty curves from measured rollouts. **Linear or emergent search-budget scaling is a hypothesis, not a measured result here.**
+
+## Local use
 
 ```bash
-UV_CACHE_DIR=/tmp/fhir-uv-cache uv venv .venv --python 3.12
-UV_CACHE_DIR=/tmp/fhir-uv-cache uv pip install --python .venv/bin/python -e ./environments/fhir_workflows pytest
-.venv/bin/python -m pytest tests -q
-.venv/bin/fhir-workflows validate environments/fhir_workflows/fhir_workflows/pilot --split dev
+uv pip install -e ./environments/fhir_workflows
+fhir-query-rl validate data/synthetic-hospital-v0.3.0 --split dev --discovery-variants
+python -m pytest tests -q
 ```
 
-The tested local interpreter is Python 3.14.6; the package requires Python >=3.12. Dependencies are declared in pyproject.toml and the tested development dependencies are pinned in requirements-dev.lock.
+- [Environment setup, loader arguments and tool contract](environments/fhir_workflows/README.md)
+- [Metric definitions and checkpoint analysis](docs/metrics-and-evaluation.md)
+- [Resource generation and workflow taxonomy](docs/benchmark-v0.3.0.md)
+- [Concrete clinical and clerical review examples](artifacts/benchmark-v0.3.0/clinical-review-pack.md)
+- [Data card and provenance](docs/dataset-card.md)
 
-To reproduce the current source-based corpus:
-
-```bash
-git clone https://github.com/sparkcpark/synthetic_hospital.git sources/hospital
-git -C sources/hospital checkout 911f34c4ac65a508543c4b3b90c373a0cd16534d
-.venv/bin/fhir-workflows build --source-db sources/hospital/benchmark_v1.3.db --output data/synthetic-hospital-v0.3.0
-.venv/bin/fhir-workflows validate data/synthetic-hospital-v0.3.0 --split dev --traces artifacts/dev-reference-traces-v0.3.0.jsonl
-.venv/bin/python scripts/package_training_data.py --source data/synthetic-hospital-v0.3.0
-```
-
-The expanded corpus has **1,268 patients, 50 resource types, 139,109 resources excluding Provenance, and 34,433 task instances across 37 workflow families**. All 5,602 source notes and 1,268 source profiles remain preserved. Hidden source diagnosis/answer tables are excluded. Authored modules add scheduling and capacity changes, rejected specimens, corrected results, imaging referrals, medication supply/administration distinctions, uncertain immunization history, insurance eligibility, billing corrections, records release, equipment handoffs, nutrition discrepancies, allergy-history entry, and nursing observations. Each patient receives a seeded subset of age-eligible modules. These are synthetic templates requiring clinical review.
-
-[Coverage and review cases](artifacts/benchmark-v0.3.0/README.md) provide auditable counts and sample prompts, narratives, expected answers and state changes. The local environment now has broader REST support, a lossless read-only SQL Resource projection, pre-write evidence checks, scheduling invariants and domain/role/CRUD filters. Most case-paperwork tasks provide identifiers; their retrieval depth is not inflated by the number of records they touch.
-
-Patient-level partitions are 720 train, 80 dev, 200 public and 268 heldout. Development patients come only from upstream train. Distractor shards stay within their partition, and the environment wheel includes train/dev only.
-
-**103 tests pass**, and all **21,716 train/dev reference workflows** pass. A clean wheel load and source-preservation audit also pass. The v0.3 verification record is in [verification-summary-v0.3.0.json](artifacts/verification-summary-v0.3.0.json). Reference workflows verify compiler/environment consistency, not trained-model performance. Original snapshots, artifacts and historical v0.2 training results remain retained.
-
-The user previously approved public visibility for [max/fhir-workflows](https://app.primeintellect.ai/dashboard/environments/max/fhir-workflows). This local v0.3 revision has not been pushed or used for a new training run. Historical model experiments are documented in [training status](docs/training-status.md); they used earlier corpus/environment versions. HF release files under `artifacts/hf-release/` also belong to the earlier revision and are not this release. See [the environment README](environments/fhir_workflows/README.md), [the data card](docs/dataset-card.md), and [the Adaption experiment](docs/adaption-experiment.md). Independent server/full-validator conformance, conformant SQL on FHIR views, and clinical review remain pending.
+Clinical expert review and independent full FHIR/server conformance validation remain outstanding. Reference replay verifies the environment's specified tasks; it does not measure trained-agent capability.

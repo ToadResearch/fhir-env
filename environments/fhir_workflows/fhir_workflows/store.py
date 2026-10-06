@@ -197,6 +197,7 @@ class FhirStore:
         self.deleted = set()
         self.audit = []
         self.events = []
+        self.observed_terms = set()
         self.assistance = []
         self.agent_tools = []
         self.active_tool = "fhir_request"
@@ -634,6 +635,11 @@ class FhirStore:
             resource.keys() if fields is None else fields
         )
 
+    def observe_response_terms(self, text):
+        from .metrics import lexical_terms
+
+        self.observed_terms.update(lexical_terms(text))
+
     def request(self, method, path, body=None, headers=None, visible_fields=None):
         method = method.upper()
         self.current_cost = 0 if method == "POST" and not path.strip("/") else 1
@@ -708,7 +714,12 @@ class FhirStore:
             and result["body"].get("type") == "searchset"
         ):
             self.events[-1]["total"] = result["body"]["total"]
-        from .metrics import query_features
+        from .metrics import filter_terms, query_features
 
         self.events[-1]["query_features"] = query_features(self.events[-1])
+        self.events[-1]["filter_terms_not_previously_observed"] = sorted(
+            filter_terms(self.events[-1]) - self.observed_terms
+        )
+        if visible_fields is None and self.active_tool in {None, "fhir_request"}:
+            self.observe_response_terms(json.dumps(result))
         return result
