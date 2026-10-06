@@ -12,6 +12,8 @@ The [Synthetic Hospital](https://github.com/sparkcpark/synthetic_hospital) expan
 
 Patient splits are **720 train / 80 dev / 200 public / 268 heldout**. Packaged environment data contains train/dev only. Task counts are correlated instances of shared templates; patient holdout does not establish unseen-workflow generalization.
 
+The full generated dataset is excluded from Git, including `data/` and the local environment's `training_data/` copy. Source downloads, validation artifacts and built distributions are also ignored. Only the small synthetic `pilot/` test fixture is committed. A fresh clone needs a [local data build](docs/generation-pipeline.md#reproduce-and-inspect) for the full benchmark; verified train/dev data can then be bundled with `python scripts/package_training_data.py`.
+
 ## How the dataset was built
 
 The synthetic additions come from **hand-authored Python scenario templates and deterministic sampling**. A patient-specific random seed selects age-eligible episodes, values, dates and workflow branches. The generator builds linked FHIR resources and matching narrative notes from those rules. Our augmentation runs locally in Python, without Synthea or LLM calls; upstream notes are preserved separately.

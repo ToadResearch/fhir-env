@@ -6,6 +6,10 @@ __pycache__/
 sources/
 artifacts/
 data/
+# Generated full benchmark packaged for local/Prime use; retain small pilot fixtures.
+training_data/
+.training-data-*/
+.prime/
 dist/
 .env
 *.log
