@@ -1,0 +1,48 @@
+# Free-model infrastructure/learning pilot. No efficiency reward.
+name = "fhir-v0-2-3-laguna-raw"
+model = "poolside/Laguna-XS-2.1"
+loss = "rl"
+max_steps = 12
+batch_size = 32
+rollouts_per_example = 4
+max_inflight_rollouts = 32
+learning_rate = 0.00003
+
+[sampling]
+max_tokens = 1024
+temperature = 0.7
+
+[[env]]
+id = "max/fhir-workflows@0.2.3"
+args = {tool_profile = "raw", query_mode = "rest", max_depth = 2, max_turns = 12, max_examples = 192, families = ["latest_result", "coverage_lookup", "documented_home_medications", "documented_conditions", "longitudinal_lab_trend", "medication_reconciliation", "correct_erroneous_result", "delete_duplicate_draft"], efficiency_weight = 0.0}
+
+[eval]
+interval = 6
+num_examples = 12
+rollouts_per_example = 1
+skip_first_step = false
+
+[eval.sampling]
+max_tokens = 1024
+temperature = 0.0
+
+[[eval.env]]
+id = "max/fhir-workflows@0.2.3"
+args = {split = "dev", eval_split = "dev", tool_profile = "raw", query_mode = "rest", max_depth = 2, max_turns = 12, max_examples = 48, families = ["latest_result", "coverage_lookup", "documented_home_medications", "documented_conditions", "longitudinal_lab_trend", "medication_reconciliation", "correct_erroneous_result", "delete_duplicate_draft"], efficiency_weight = 0.0}
+
+# Disable only the pre-batch zero-advantage filter for diagnostics. The hosted
+# post-batch filter still drops untrainable groups and can abort all-zero runs.
+[[pre_batch_filters]]
+type = "zero_advantage"
+enforce = false
+
+[checkpoints]
+interval = 6
+keep_cloud = 2
+
+[adapters]
+interval = 6
+keep_last = 2
+
+[infrastructure]
+compute_size = "M"

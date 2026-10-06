@@ -1,0 +1,43 @@
+# Replace YOUR_NAMESPACE after publishing the environment with --runtime v0.
+# Native PrimeRL + deployment routes to dedicated hosted training.
+# Check prime train models --fft-only and prime train gpus before dispatch.
+name = "fhir-workflows-rest"
+max_steps = 100
+seq_len = 16384
+
+[model]
+name = "Qwen/Qwen3-4B"
+
+[deployment]
+num_train_gpus = 1
+num_infer_gpus = 1
+
+[orchestrator]
+batch_size = 64
+
+[orchestrator.train]
+group_size = 8
+
+[orchestrator.train.sampling]
+max_completion_tokens = 2048
+
+[[orchestrator.train.source]]
+name = "fhir-rest-train"
+env.id = "YOUR_NAMESPACE/fhir-workflows"
+env.args = { query_mode = "rest", max_depth = 2, efficiency_weight = 0.0 }
+
+[orchestrator.eval]
+interval = 10
+
+[[orchestrator.eval.source]]
+name = "fhir-rest-dev"
+select.limit = 200
+env.id = "YOUR_NAMESPACE/fhir-workflows"
+env.args = { query_mode = "rest", max_depth = 4, efficiency_weight = 0.0 }
+
+[trainer.optim]
+lr = 3e-6
+
+[ckpt]
+
+[inference]

@@ -1,0 +1,41 @@
+# Native PrimeRL recipe, checked against current source-table format.
+# Environment loader compatibility is tested locally; full trainer-schema/GPU
+# validation and hosted model-cache eligibility are not yet verified.
+max_steps = 100
+seq_len = 16384
+
+[model]
+name = "Qwen/Qwen3-4B"
+
+[orchestrator]
+batch_size = 64
+
+[orchestrator.train]
+group_size = 8
+
+[orchestrator.train.sampling]
+max_completion_tokens = 2048
+
+[[orchestrator.train.source]]
+name = "fhir-rest-train"
+env.id = "fhir-workflows"
+env.args = { split = "train", eval_split = "dev", query_mode = "rest", max_depth = 2, efficiency_weight = 0.0 }
+
+[orchestrator.eval]
+interval = 10
+
+[orchestrator.eval.sampling]
+max_completion_tokens = 2048
+
+[[orchestrator.eval.source]]
+name = "fhir-rest-dev"
+select.limit = 200
+env.id = "fhir-workflows"
+env.args = { split = "train", eval_split = "dev", query_mode = "rest", max_depth = 4, efficiency_weight = 0.0 }
+
+[trainer.optim]
+lr = 3e-6
+
+[ckpt]
+
+[inference]

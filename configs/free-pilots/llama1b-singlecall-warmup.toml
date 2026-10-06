@@ -1,0 +1,51 @@
+# Distinct artificial-chart curriculum warm-up after all-zero full-chart Llama baseline.
+# Free-model infrastructure/learning pilot. No efficiency reward.
+name = "fhir-v0-2-3-llama1b-singlecall-warmup"
+model = "sprints/Llama-3.2-1B-Instruct"
+loss = "rl"
+max_steps = 6
+batch_size = 16
+rollouts_per_example = 4
+max_inflight_rollouts = 16
+learning_rate = 0.00003
+
+[sampling]
+max_tokens = 4096
+temperature = 0.7
+extra_body = {parallel_tool_calls = false}
+
+[[env]]
+id = "max/fhir-workflows@0.2.3"
+args = {pilot = true,sampling_args = {parallel_tool_calls = false},tool_profile = "raw", query_mode = "rest", max_depth = 2, max_turns = 8, max_examples = 16, families = ["latest_result", "coverage_lookup"], efficiency_weight = 0.0}
+
+[eval]
+interval = 6
+num_examples = 4
+rollouts_per_example = 1
+skip_first_step = false
+
+[eval.sampling]
+max_tokens = 4096
+temperature = 0.0
+extra_body = {parallel_tool_calls = false}
+
+[[eval.env]]
+id = "max/fhir-workflows@0.2.3"
+args = {pilot = true,sampling_args = {parallel_tool_calls = false},split = "dev", eval_split = "dev", tool_profile = "raw", query_mode = "rest", max_depth = 2, max_turns = 8, max_examples = 8, families = ["latest_result", "coverage_lookup"], efficiency_weight = 0.0}
+
+# Disable only the pre-batch zero-advantage filter for diagnostics. The hosted
+# post-batch filter remains active and aborts after ten untrainable batches.
+[[pre_batch_filters]]
+type = "zero_advantage"
+enforce = false
+
+[checkpoints]
+interval = 6
+keep_cloud = 2
+
+[adapters]
+interval = 6
+keep_last = 2
+
+[infrastructure]
+compute_size = "M"
