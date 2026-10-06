@@ -10,6 +10,43 @@ The [Synthetic Hospital](https://github.com/sparkcpark/synthetic_hospital) expan
 
 Patient splits are **720 train / 80 dev / 200 public / 268 heldout**. Packaged environment data contains train/dev only. Task counts are correlated instances of shared templates; patient holdout does not establish unseen-workflow generalization.
 
+## How the dataset was built
+
+The synthetic additions come from **hand-authored Python scenario templates and deterministic sampling**. A patient-specific random seed selects age-eligible episodes, values, dates and workflow branches. The generator builds linked FHIR resources and matching narrative notes from those rules. Our augmentation runs locally in Python, without Synthea or LLM calls; upstream notes are preserved separately.
+
+```text
+Synthetic Hospital: 1,268 patients + 5,602 encounter notes
+             JSON profiles and encounter records
+                              |
+                +-------------+-------------+
+                |                           |
+         PRESERVE AND MAP              GENERATE ADDITIONS
+         Original notes/profiles       Authored scenarios + patient seed
+         -> DocumentReference          -> Labs, orders, reports, messages,
+         Explicit facts/visits            medications and admin workflows
+         -> Encounter, Condition,      -> Matching synthetic notes,
+            MedicationStatement, ...      demographics and identifiers
+                |                           |
+                +-------------+-------------+
+                              |
+                 Merge into linked FHIR charts
+                 Record origin tags and provenance
+                              |
+                 Compile requests, required evidence,
+                 expected answers and CRUD changes
+                              |
+                 Schema/graph checks + reference replay
+                              |
+                 50 FHIR types / 34,433 base tasks
+                 139,109 resources excluding Provenance
+```
+
+**All 17,117 Observations, including lab results and measurements, are generated fixtures.** They were not extracted from the source notes. Of the 139,109 non-Provenance resources, **117,428 are generated additions** and **21,681 are source-derived or mixed mappings**. Source notes remain preserved; generated episodes still need clinical review and checks for contradictions with those notes.
+
+The code lives in [the importer and task compiler](environments/fhir_workflows/fhir_workflows/dataset.py), [longitudinal episode templates](environments/fhir_workflows/fhir_workflows/longitudinal.py), and [clinical/administrative scenario templates](environments/fhir_workflows/fhir_workflows/scenarios.py). See the [data card](docs/dataset-card.md) for provenance details.
+
+## Task examples
+
 | Area | Examples | Operations |
 |---|---|---|
 | [Clinical search](docs/tasks/clinical-search.md) | Latest valid results, serial measurements, order → report → imaging study | R |
@@ -51,7 +88,7 @@ python -m pytest tests -q
 - [Environment setup, loader arguments and tool contract](environments/fhir_workflows/README.md)
 - [Metric definitions and checkpoint analysis](docs/metrics-and-evaluation.md)
 - [Resource generation and workflow taxonomy](docs/benchmark-v0.3.0.md)
-- [Browse task examples by workflow area](#data-and-workflows)
+- [Browse task examples by workflow area](#task-examples)
 - [Data card and provenance](docs/dataset-card.md)
 
 Clinical expert review and independent full FHIR/server conformance validation remain outstanding. Reference replay verifies the environment's specified tasks; it does not measure trained-agent capability.
