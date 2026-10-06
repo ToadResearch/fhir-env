@@ -4,7 +4,7 @@ import copy
 
 import pytest
 
-from fhir_workflows.store import FhirStore
+from fhir_query_rl.store import FhirStore
 
 
 def setup_case(existing_count):

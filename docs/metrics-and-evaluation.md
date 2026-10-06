@@ -90,7 +90,7 @@ Record one JSON object per rollout with this structure (illustrative schema, not
 Use real `info`, `fhir_metrics`/`metrics`, `trajectory` and `fhir_trace` from saved Verifiers state. Add explicit run metadata and `evaluation_config`; do not infer training steps from row order. Omit `trajectory` when unavailable rather than replacing a real trajectory with an empty list. Keep full loader arguments in the evaluation run's accompanying config as well. The corpus digest is SHA-256 of the frozen source `manifest.json`; the separate discovery manifest records variant task hashes. Distinct `rollout_id` values are required for repeated samples. Seed identifies the matched experimental/evaluation replicate.
 
 ```bash
-uv pip install -e "./environments/fhir_workflows[analysis]"
+uv pip install -e "./environments/fhir_query_rl[analysis]"
 python scripts/analyze_query_experiments.py evaluations/checkpoints.jsonl \
   --output artifacts/query-evaluation --plots
 ```

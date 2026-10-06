@@ -9,17 +9,17 @@ import pytest
 import verifiers as vf
 from verifiers.types import Response, ResponseMessage
 
-from fhir_workflows.dataset import load_jsonl
-from fhir_workflows.fhir_workflows import load_environment
-from fhir_workflows.protocol import parse_object
-from fhir_workflows.scoring import evaluate_training
-from fhir_workflows.sql import query
-from fhir_workflows.store import FhirStore
-from fhir_workflows.validation import ref
+from fhir_query_rl.dataset import load_jsonl
+from fhir_query_rl.fhir_query_rl import load_environment
+from fhir_query_rl.protocol import parse_object
+from fhir_query_rl.scoring import evaluate_training
+from fhir_query_rl.sql import query
+from fhir_query_rl.store import FhirStore
+from fhir_query_rl.validation import ref
 
 PILOT = (
     Path(__file__).resolve().parents[1]
-    / "environments/fhir_workflows/fhir_workflows/pilot"
+    / "environments/fhir_query_rl/fhir_query_rl/pilot"
 )
 
 

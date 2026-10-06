@@ -1,5 +1,7 @@
 # Laboratory
 
+The [v0.4.0 pipeline](../generation-pipeline.md) also tests `DiagnosticReport.result → Observation.hasMember`, component-based panels, pending collection and rejected specimens. Result values must come from the linked current report; an older same-test result cannot fill a gap in a different order.
+
 [← Benchmark overview](../../README.md)
 
 A shortened synthetic dev example. Resolve the supplied MRN and cite supporting records; excerpts are not complete FHIR resources.

@@ -9,26 +9,26 @@ import sys
 import pytest
 from verifiers.types import Response, ResponseMessage, Usage
 
-from fhir_workflows.cli import replay_task
-from fhir_workflows.dataset import load_jsonl
-from fhir_workflows.discovery import FAMILIES, discovery_variant
-from fhir_workflows.experiments import normalize, summarize
-from fhir_workflows.fhir_workflows import load_environment
-from fhir_workflows.helpers import chart_timeline
-from fhir_workflows.metrics import (
+from fhir_query_rl.cli import replay_task
+from fhir_query_rl.dataset import load_jsonl
+from fhir_query_rl.discovery import FAMILIES, discovery_variant
+from fhir_query_rl.experiments import normalize, summarize
+from fhir_query_rl.fhir_query_rl import load_environment
+from fhir_query_rl.helpers import chart_timeline
+from fhir_query_rl.metrics import (
     filter_terms,
     rollout_usage_metrics,
     search_behavior,
     task_dimensions,
 )
-from fhir_workflows.sql import query
-from fhir_workflows.store import FhirStore
-from fhir_workflows.validation import ref
+from fhir_query_rl.sql import query
+from fhir_query_rl.store import FhirStore
+from fhir_query_rl.validation import ref
 
 
 PILOT = (
     Path(__file__).resolve().parents[1]
-    / "environments/fhir_workflows/fhir_workflows/pilot"
+    / "environments/fhir_query_rl/fhir_query_rl/pilot"
 )
 
 

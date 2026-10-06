@@ -1,0 +1,1004 @@
+{
+  "atomic_tasks": 9822,
+  "base_manifest_sha256": "ea7d8a9168811ddc6cbf576b7742226603ad3b7b47e595ee232645a4cefa5cf7",
+  "crud": {
+    "CR": 10847,
+    "CRU": 3482,
+    "R": 18555,
+    "RD": 3835,
+    "RU": 10394
+  },
+  "dependency_depth": {
+    "1": 19927,
+    "2": 10144,
+    "3": 10702,
+    "4": 5912,
+    "5": 428
+  },
+  "distinct_families": 47,
+  "domains": {
+    "diagnostics": 2534,
+    "episode": 7608,
+    "equipment": 1332,
+    "immunization": 1222,
+    "legacy": 18386,
+    "medication": 1186,
+    "nursing": 1348,
+    "records": 3864,
+    "referral": 1388,
+    "registration": 2536,
+    "revenue": 1905,
+    "scheduling": 3804
+  },
+  "families": {
+    "acknowledgement_and_task_completion": 272,
+    "ambiguous_identity": 634,
+    "cancel_referral": 1268,
+    "cancel_visit_release_capacity": 1268,
+    "correct_erroneous_result": 1268,
+    "corrected_result_provenance": 633,
+    "coverage_change": 1268,
+    "coverage_lookup": 1268,
+    "date_specific_eligibility": 635,
+    "delete_duplicate_draft": 1268,
+    "delete_unsent_release_draft": 664,
+    "delete_unsubmitted_duplicate_claim": 635,
+    "document_availability": 1268,
+    "documented_conditions": 1268,
+    "documented_home_medications": 1268,
+    "duplicate_charge_correction": 635,
+    "episode_cancel_appointment": 1268,
+    "episode_delete_duplicate": 1268,
+    "episode_eligibility": 1268,
+    "episode_lab_followup": 1268,
+    "episode_lab_result": 1268,
+    "episode_medication_handoff": 1268,
+    "home_equipment_handoff": 666,
+    "imaging_report_linkage": 558,
+    "immunization_error_correction": 611,
+    "interpreter_handoff": 1268,
+    "latest_result": 1268,
+    "linked_report": 1268,
+    "longitudinal_lab_trend": 1268,
+    "medication_reconciliation": 1268,
+    "medication_supply_vs_administration": 593,
+    "message_followup": 1268,
+    "nursing_observation_and_visit_close": 674,
+    "nutrition_order_discrepancy": 666,
+    "outside_immunization_documentation": 611,
+    "patient_declines_appointment": 1268,
+    "prior_auth_evidence": 1268,
+    "record_transfer_transmission": 1268,
+    "records_release_scope_review": 664,
+    "referral_loop_closure": 558,
+    "refill_request_routing": 593,
+    "reported_allergy_with_uncertainty": 674,
+    "reschedule_with_slot_release": 1268,
+    "review_similar_orders": 1268,
+    "specimen_recollection_request": 633,
+    "transfer_packet_search": 1268,
+    "verified_contact_change": 1268
+  },
+  "files": {
+    "dev/shards/0000.ndjson": "4372601284548298e7edb6a329b5898ab60d334593539a56b4ba10f1ce396ae9",
+    "dev/shards/0001.ndjson": "36c1e5a51ae6679ef32e7ab1e5947e8d4d634ae00c671e58b5dfc51004b68aed",
+    "dev/shards/0002.ndjson": "389aba03ddbde04d42b6d1d1091e04fa86ea89b781543ed6b9479451dcc64f64",
+    "dev/shards/0003.ndjson": "2bc053022a3c21ed2fcda505e6fafe318e64eb0178559cf91f6ee9dce27c946e",
+    "dev/shards/0004.ndjson": "c9f9b83b9428424cb22d4de7abfb2193eb57adeb3f038e4f404197d8853c195a",
+    "dev/shards/0005.ndjson": "f3465f4c559baefdd06d797daf94b2957e18e3100e4d912f9028bdc43d9aac48",
+    "dev/shards/0006.ndjson": "7276da1be38d827b46892d07d2bb7207b239d9e4aafdb57abc3bf4517c54a2b1",
+    "dev/shards/0007.ndjson": "875e69d2ed6033717731b067a5693cdcfca22397a67f832a610c090e1413e345",
+    "dev/shards/0008.ndjson": "8524ebbf34a40b469c61939f023b18b44957ca8d9876a02c378d3a146592316a",
+    "dev/shards/0009.ndjson": "2ebbdf90fdb3f6f3218177ba16c1b306495a0edcde1c32c03b70040f07f83501",
+    "dev/tasks.jsonl": "2ea6fd146d956c667fdd7b7447b49a4576beee97bc11c118e700c836b7f059d1",
+    "train/shards/0000.ndjson": "ff63d578e04da7c33a7ed35e46ecbd805135b976ca1d15101a86e4d77525b1f2",
+    "train/shards/0001.ndjson": "174ea1fdfbdeb2573d990f1542f2a104fd396227a2ae2ceefe1e19bbc92efffb",
+    "train/shards/0002.ndjson": "63d509593f39f7d64b1ea03cd3c48968d58b4c5440c5229e3f0f06ea0d923910",
+    "train/shards/0003.ndjson": "34ff7739393469c0390993b2e17da83470aac726e9e77ed6402c1eb2cbd3b627",
+    "train/shards/0004.ndjson": "897f5efcebaa91a29b9e483cf3310968cda0a3d29eb4ef4afb9b461f23a8d973",
+    "train/shards/0005.ndjson": "4b678d711991d761eb2e9b7b2eddb6c92ee2aa5d3b93eb6a49bbb8a922b422bf",
+    "train/shards/0006.ndjson": "cb22ab68867001f5288c9900cc7f078af5e047e35a60164d4faa1e170200cd2d",
+    "train/shards/0007.ndjson": "9117489d5c54c163a3d73b5480629d7a9bebb9b684b6d0f27facbd0bd0242e23",
+    "train/shards/0008.ndjson": "17b8f81980030ea5794c974ede9dda5b5e6f3402e857e5dcfc262a43c3b24676",
+    "train/shards/0009.ndjson": "fd526f93b02098d6bcbcb4922e4b465fedcae4722f5beb3db2f2fe72d78a06db",
+    "train/shards/0010.ndjson": "8b693cf20ccd4c6afb50679670322b4e2a45097fd3e2d02ad8f9288995c728c3",
+    "train/shards/0011.ndjson": "284a71a55b802afc3416153bce422be166eb24eaee5bd356e52710c5edee38b4",
+    "train/shards/0012.ndjson": "f6755bcb1ee5870102b066135763dbaa47fdeb5bcad5a8c53ad0713e30e5165c",
+    "train/shards/0013.ndjson": "4bdd43b325b1452209e22f41fcf85c20025a0cbd89439102017eafd48610e2fa",
+    "train/shards/0014.ndjson": "740bef01d600a18c209faf1e6c705946d25eed6a23ac9837cb6b77a17a9239ff",
+    "train/shards/0015.ndjson": "79d2e1a65ea8c8defdad19fd2fa1ee1f411b16f39b38903e1ba0ff23cc7052ec",
+    "train/shards/0016.ndjson": "2110572cc92a82d3d8ce76c880750a5459bb7173b81fdea0a189cd2202675bf5",
+    "train/shards/0017.ndjson": "af455eadc3565ec44d1562f2de578ac8009d5ff4ea084ee4ac3abcd77184cc18",
+    "train/shards/0018.ndjson": "56200ee9e586b435a453ab18d9be287decc3d61cd37827b7a92b2bd6fc87745e",
+    "train/shards/0019.ndjson": "dd425c336dafba7fc3b21550efabb0b2aa05b8c3e80cc1bfca7d8064ef45fc32",
+    "train/shards/0020.ndjson": "16d59e513cb4252adabd51e89c4f283191242a6351f7ff7b4ef80e77c60fb722",
+    "train/shards/0021.ndjson": "beada2f017f90ba07fc9f43af50c68fcc1eed20380bf7eac144789dfd312ecd2",
+    "train/shards/0022.ndjson": "b83b904d3fec64b6d30d95d7473dd1d0aa321ed1d5701b176270c18b718e2c2b",
+    "train/shards/0023.ndjson": "eca76f178db8d4af8217ade40b54844a66f567343b8aa32a6b518bffca784b9c",
+    "train/shards/0024.ndjson": "be4334994c8d6a05331a0101b582ee000634ce6f0ce3c52c789906a78efa31ec",
+    "train/shards/0025.ndjson": "1f52ff23d73c1a587a673e84e68fe4ffdd428c89ccd675a41c3d628a99011c89",
+    "train/shards/0026.ndjson": "f168146f239cbdc7d266406ae0fe80a6cf5ab4ce1c8775ffd809d1e3c81face1",
+    "train/shards/0027.ndjson": "d241b530feed1cbccfe16075305174a78b0f1009bfd53c4ef9c3a5ce475fabc5",
+    "train/shards/0028.ndjson": "48540bf5c6eb4b57d0689274acd940198ce11855c633c2d4e73b32d6f2c04232",
+    "train/shards/0029.ndjson": "6e825f1deb302ca3511d83d8e61b3355a54d583b61597dd087920483faa71f59",
+    "train/shards/0030.ndjson": "f07bf26ba16841051916faf6d3cd9a09db3c30f5e76602a5a326ef580fe51036",
+    "train/shards/0031.ndjson": "d2035b781a361c73e730ecfb2bdaa7acfe8b84ff36cbed614e17bc8c45a9b41a",
+    "train/shards/0032.ndjson": "35728ca7a3fd5def1a0eb71ba22b31378bab491deb1f7b7e12cfc3fefb69b754",
+    "train/shards/0033.ndjson": "3f906df45a7f1add67c48fe320cb29e3cd1b8aa66a5cd3bdcacd06c0562d57f1",
+    "train/shards/0034.ndjson": "289f5638dc5594b760aa211a1e84f93cd74e56b00162da030e2f932c801c540a",
+    "train/shards/0035.ndjson": "c0b7f8554ade8fe1b2dd6a7d9169250e03c8e79ce050682879c05efaaf9496b2",
+    "train/shards/0036.ndjson": "8b2eac4bdfa74a5e9bcdd0a733f0cf8d349fda1537f27ffda71447d22eccad36",
+    "train/shards/0037.ndjson": "77f1eca8afb5a7d0e35d930c7a151738125b8d9fdbf8709a1fbb239d30b934a7",
+    "train/shards/0038.ndjson": "057fca469baefe37e55c6856a068cae7e02b80f8eb3d6437101dafe23c743258",
+    "train/shards/0039.ndjson": "797763d4c516a993fdf918077500b658f97a1dc74d99f83f480f999d13862dc0",
+    "train/shards/0040.ndjson": "af329316f70bafc052c1b6fa6ea6873101f06f5733436a2120f9d2236199e265",
+    "train/shards/0041.ndjson": "c06f437067d23205327399c2ece40fd0d72635516cc4bb035241b808513b23be",
+    "train/shards/0042.ndjson": "b4916bf0bade9ddb61517e05e07ed3e49de8c57725243910b0b66070d5525287",
+    "train/shards/0043.ndjson": "e7730084840cc0250ea0cf92c81cce0afbd0d905fe97852b6275393a645ba951",
+    "train/shards/0044.ndjson": "3cb1da62e9436be7d4ddf9151c21379d9d9bba25da88c5ecd4780f0486c62b26",
+    "train/shards/0045.ndjson": "f4dfb3f4bc609bdfba889188c9a5fede3515f923cc6b8ea889947dd3d048cd25",
+    "train/shards/0046.ndjson": "eaa86f2ee99def5ed8ad77117ba34498328eed317f14c4a74b2dd28dd8a2d6dd",
+    "train/shards/0047.ndjson": "bcbeb2a0fc4be36e110da596a7c7218f07941ec0c8fb7d76f68a61dc2fb34035",
+    "train/shards/0048.ndjson": "822976e740ad21b208e9ef05a98f6ffa39a278d0afad2669baf80cf9860aaf06",
+    "train/shards/0049.ndjson": "7346c4aaca21474c7c9ceb25a24f01caee336222e4ece39ab96df2f5e717a3a1",
+    "train/shards/0050.ndjson": "669691bcade289a8d4b5fa7943c36bf14d6467b48678d420d742916cebb652e1",
+    "train/shards/0051.ndjson": "23996daeee9cff7265bf403452bf900ffc9a7a882f17da2d572bf06d9731e046",
+    "train/shards/0052.ndjson": "454e92ebb309ca7f4ad69bd7f3a20e9c18df7c48612900ac5fd3d0a72cce0f61",
+    "train/shards/0053.ndjson": "6ad1b404cf8456b900507f8dce5e4f1de39aac7d9536b16d71469ff7d9fd8194",
+    "train/shards/0054.ndjson": "655bba1da5de9dd09849af839962d2ddb1d3035bb353920af9bcf9d71a9f12f0",
+    "train/shards/0055.ndjson": "449b625299f79a2ca825e0639f012b00a7cde6861d68fafa280d44f65e0fd40f",
+    "train/shards/0056.ndjson": "a86a700e15b1d7547a019529a8870749a9278610434f138d4288970efa0e6e11",
+    "train/shards/0057.ndjson": "0b662dc4d33de3c55a5139703e8f6077d749e321e42becadc298a289c36a215e",
+    "train/shards/0058.ndjson": "77deff5af72928c17952fbe68f6bb4de307d53461fd3be266f355b232f7b0bd0",
+    "train/shards/0059.ndjson": "4e9e24f2376f13b3b671ee648694066e9755dacf9b049166a71eb028b41cab96",
+    "train/shards/0060.ndjson": "778b6f7eef0ba513ac97d08ebec2d237cedda6c52c3ad50755f1bec6d9e3ca48",
+    "train/shards/0061.ndjson": "e0cc9fe42096762923a9611ccf1e3ffb172560fbd9bb071e9c608ef28084bdb5",
+    "train/shards/0062.ndjson": "f482243273e92a478e715b4bcdda111521c48bbee8f02d0a09280f3252c86eea",
+    "train/shards/0063.ndjson": "34aa25ea6ccc54a736c6baff9af0a5ab4dd676a45b850dc70634962171968277",
+    "train/shards/0064.ndjson": "0822a505e907d28d2fc0cde89807412a7489c0f5972fbb8c2b05ad5f6c5301e8",
+    "train/shards/0065.ndjson": "71c592a0f3a316dee00496cc0a4e77f6bcace45124715e1fde36f80cc45c9d39",
+    "train/shards/0066.ndjson": "d3574681bfa9c7f994b743ff43ada2a5d4f1bf717a881e11f8ddbbf1c4527164",
+    "train/shards/0067.ndjson": "c472462a19af4b79aacd9b747dff4143000a01d9682acb6c88cdf747ae581838",
+    "train/shards/0068.ndjson": "036256eaa342e2f88b096cba327fd6aa906497c3ded8a7a8c5e8b910554ec00a",
+    "train/shards/0069.ndjson": "7e6f6f240b4a17243116c5aaebb15032c8943c34db0bb7ef6d18f17656577be5",
+    "train/shards/0070.ndjson": "7928af8eddbc2efdda66f3b81b9c819248c063887b5e289eb16df983a3e8c3ea",
+    "train/shards/0071.ndjson": "6e57ca5aa4f6f3047432c547992394fb4a39abbab7722653c5d0a74a9b07825c",
+    "train/shards/0072.ndjson": "d2396667f2fe8a11290eaed93ee7b3323f0a316ad30897dee0ec5b02fa9ffd90",
+    "train/shards/0073.ndjson": "50466013bf2fcafc9b2a6a196063e85795fa0bf80a3812fb64f2c91077b41e52",
+    "train/shards/0074.ndjson": "09ac4053931d5489cc8432d082699fee152bee14a62154ded8c05e50700b9a98",
+    "train/shards/0075.ndjson": "9078934d38a581b9dcf304e84f84da6f96ca53e9243220e8f9c211771c19a469",
+    "train/shards/0076.ndjson": "5823de5e6769c1766654c249bc2274355562d7cda597fbb196313ef4ae651317",
+    "train/shards/0077.ndjson": "63979404ee00babf26d1ca201eb7cfd773f9c72bff4c5aa7af02177895c25d98",
+    "train/shards/0078.ndjson": "d0261f4a32112164ac111b990b0c9292a786c6b0a8adac4c5a3bedc31996c05b",
+    "train/shards/0079.ndjson": "840167132aada5a865ee9b8e9839d29f950798a1756ad6fa9938bade3c546934",
+    "train/shards/0080.ndjson": "007527501b79f3b42c64a922e0d17ff4ce099d0ec39b39ee0aa459b966f1135c",
+    "train/shards/0081.ndjson": "29c635831998f11279276c6d6f6c46b7e9cbbed777a638ef7b2da88b9c8f5d82",
+    "train/shards/0082.ndjson": "5f0ad228ded6fc8837f1c82209d57bd6927772ddb8ece78a6e821159459e3486",
+    "train/shards/0083.ndjson": "d9f091324e1b7b38cc95947fd609e71a549460812a3a1638f7946ee32e43636a",
+    "train/shards/0084.ndjson": "fcbc11062d5d1380337542d0c0190a3855bf929d884f58269f52697fa69112c5",
+    "train/shards/0085.ndjson": "2d7176fc6fcf3da044bcf5909e9418f586cc957fe33166e7b4f4f48c156038a1",
+    "train/shards/0086.ndjson": "3394ded17ee381aaf4fe7ce7a0c7801267d104214eca503e56e629f0e4418078",
+    "train/shards/0087.ndjson": "bda26d36f5d01f4f64ab2140f43be194978b933b47503c4b5fc372a1c6cf1238",
+    "train/shards/0088.ndjson": "2c4f942de05868505ff780ce1847ba66c54a6269ef92278b8f4c293f67745572",
+    "train/shards/0089.ndjson": "4435c4d4b65f5520fda1b13c26092ab17b18fa7bc42a547a35e6c7de7491d9ad",
+    "train/tasks.jsonl": "584b18d987ffe9a0d4ca638935b330ffef4a9b3579c41ac6186ff253fd48945e"
+  },
+  "generation": {
+    "additional_tasks_per_patient": 10,
+    "contracts_sha256": "37a01e71e4cdf4437ab8f6f62a521b72a5aee2ccd9928f91b52d842a528759ea",
+    "episode_count": 1268,
+    "generator_code_sha256": {
+      "dataset.py": "eb02ff39b0a6a3c5a5981df16af2305e171a7728aee3bd026dc647d7d35362f7",
+      "generation.py": "7db3084c23302ac7fd9dac19ccdecf3021aaca83d89ed76fcfaa7be32060e1db",
+      "generation_pilot.py": "c2270de5bd03d88c2f3ec5445b0a8870ac468fc2899279dec264afcb1d1be28e",
+      "longitudinal.py": "4d72a8c51ec12de8eafe37eeafae24ad094733272af230d41d099cd10dd3601d",
+      "resource_contracts.py": "7f9a9cdc4f9cc58df599614026e7e4e56ba0c6e080f0f098bb62cc2ee21668c2",
+      "scenarios.py": "d1102ff3a98a02bcee65b2839e1f893f930e781357eb6b9ee82efb88d80b115a",
+      "scoring.py": "6c40176ac8c0a096315c6f8cff820b462a7d4aaeff133c1511e0117eea593098",
+      "store.py": "1dafb88cc0e81fa2d819e39365c50ac7d2b0bdca1c1bb27e5ad037c6d986c6d2",
+      "validation.py": "6bddf8fbb50d288e23b851c6107b2bb1c303c97d6bdbef23fd5fc58075ddd82b"
+    },
+    "history_versions": 4720,
+    "original_input_unchanged": true,
+    "reference_tasks_replayed": 47113,
+    "repairs": {
+      "device_order_link_in_provenance": 666,
+      "reported_allergy_status": 403
+    }
+  },
+  "packaged_patients": {
+    "dev": 80,
+    "train": 720
+  },
+  "packaged_splits": [
+    "train",
+    "dev"
+  ],
+  "packaged_tasks": {
+    "dev": 2986,
+    "train": 26730
+  },
+  "patients": {
+    "dev": 80,
+    "heldout": 268,
+    "public": 200,
+    "train": 720
+  },
+  "pipeline": "source-preserving legacy coverage + standards-derived event graphs",
+  "resources": {
+    "Account": 635,
+    "AllergyIntolerance": 403,
+    "Appointment": 3804,
+    "AppointmentResponse": 1268,
+    "CarePlan": 1268,
+    "CareTeam": 2536,
+    "ChargeItem": 635,
+    "Claim": 635,
+    "Communication": 11442,
+    "CommunicationRequest": 1328,
+    "Composition": 3804,
+    "Condition": 3987,
+    "Consent": 1932,
+    "Coverage": 3804,
+    "CoverageEligibilityRequest": 1903,
+    "CoverageEligibilityResponse": 1903,
+    "DetectedIssue": 1268,
+    "Device": 1934,
+    "DeviceRequest": 666,
+    "DeviceUseStatement": 666,
+    "DiagnosticReport": 7531,
+    "DocumentManifest": 1268,
+    "DocumentReference": 22035,
+    "Encounter": 12616,
+    "EpisodeOfCare": 2536,
+    "Flag": 1268,
+    "Goal": 1268,
+    "HealthcareService": 1268,
+    "ImagingStudy": 558,
+    "Immunization": 611,
+    "List": 2536,
+    "Location": 1586,
+    "Medication": 1861,
+    "MedicationAdministration": 593,
+    "MedicationDispense": 2826,
+    "MedicationRequest": 3129,
+    "MedicationStatement": 4819,
+    "NutritionOrder": 666,
+    "Observation": 24651,
+    "Organization": 4154,
+    "Patient": 1268,
+    "Practitioner": 1586,
+    "PractitionerRole": 1586,
+    "Procedure": 1268,
+    "Provenance": 185512,
+    "Questionnaire": 2536,
+    "QuestionnaireResponse": 2536,
+    "RelatedPerson": 1488,
+    "Schedule": 2536,
+    "ServiceRequest": 9432,
+    "Slot": 5072,
+    "Specimen": 6338,
+    "SupplyDelivery": 666,
+    "Task": 9434
+  },
+  "roles": {
+    "billing specialist": 1270,
+    "care coordinator": 13346,
+    "clinic nurse": 1307,
+    "front-desk coordinator": 1268,
+    "health information management clerk": 1328,
+    "home-health coordinator": 666,
+    "immunization nurse": 611,
+    "immunization registrar": 611,
+    "insurance verification specialist": 635,
+    "laboratory coordinator": 633,
+    "legacy": 18386,
+    "medication reconciliation nurse": 593,
+    "referral coordinator": 1388,
+    "registration clerk": 1268,
+    "scheduling coordinator": 2536,
+    "telephone triage nurse": 593,
+    "triage nurse": 674
+  },
+  "seed": 17,
+  "source": "Synthetic Hospital v1.3",
+  "source_corpus_manifest_sha256": "bdae08d8631afad32765142a5e9a9863e76334688cb2ed523dfd140a1e138a70",
+  "source_sha256": "8fb8eb114508f272588b6121ca78cff53a6fc2e5f47d7aa01bfbb5bcef4e6ddb",
+  "structure": {
+    "baseline": {
+      "distinct_shapes": 88,
+      "edge_counts": {
+        "Account->Coverage": 635,
+        "Account->Patient": 635,
+        "AllergyIntolerance->Patient": 403,
+        "Appointment->Patient": 2536,
+        "Appointment->Practitioner": 1268,
+        "Appointment->Slot": 1268,
+        "CarePlan->Goal": 1268,
+        "CarePlan->Patient": 1268,
+        "CareTeam->Patient": 1268,
+        "CareTeam->Practitioner": 1268,
+        "CareTeam->RelatedPerson": 1268,
+        "ChargeItem->Account": 635,
+        "ChargeItem->Patient": 635,
+        "Claim->Coverage": 635,
+        "Claim->Organization": 635,
+        "Claim->Patient": 635,
+        "Communication->Encounter": 3804,
+        "Communication->MedicationRequest": 593,
+        "Communication->NutritionOrder": 666,
+        "Communication->Patient": 16543,
+        "Communication->Practitioner": 5072,
+        "Communication->RelatedPerson": 1238,
+        "Communication->ServiceRequest": 633,
+        "Communication->Specimen": 633,
+        "CommunicationRequest->DocumentReference": 664,
+        "CommunicationRequest->Organization": 1328,
+        "CommunicationRequest->Patient": 1328,
+        "Composition->DocumentReference": 3804,
+        "Composition->Encounter": 3804,
+        "Composition->Patient": 3804,
+        "Composition->Practitioner": 3804,
+        "Condition->Patient": 3987,
+        "Consent->Organization": 664,
+        "Consent->Patient": 1932,
+        "Coverage->Organization": 2536,
+        "Coverage->Patient": 2536,
+        "CoverageEligibilityRequest->Coverage": 635,
+        "CoverageEligibilityRequest->Organization": 635,
+        "CoverageEligibilityRequest->Patient": 635,
+        "CoverageEligibilityResponse->Coverage": 635,
+        "CoverageEligibilityResponse->CoverageEligibilityRequest": 635,
+        "CoverageEligibilityResponse->Organization": 635,
+        "CoverageEligibilityResponse->Patient": 635,
+        "Device->Patient": 1934,
+        "DeviceRequest->Device": 666,
+        "DeviceRequest->Patient": 666,
+        "DeviceRequest->Practitioner": 666,
+        "DeviceUseStatement->Device": 666,
+        "DeviceUseStatement->DeviceRequest": 666,
+        "DeviceUseStatement->Patient": 666,
+        "DiagnosticReport->Encounter": 2536,
+        "DiagnosticReport->ImagingStudy": 558,
+        "DiagnosticReport->Observation": 4437,
+        "DiagnosticReport->Patient": 4995,
+        "DiagnosticReport->ServiceRequest": 4995,
+        "DiagnosticReport->Specimen": 3169,
+        "DocumentReference->Encounter": 9406,
+        "DocumentReference->Patient": 18231,
+        "DocumentReference->Practitioner": 10093,
+        "Encounter->EpisodeOfCare": 3804,
+        "Encounter->Patient": 11348,
+        "Encounter->Practitioner": 3804,
+        "EpisodeOfCare->Organization": 1268,
+        "EpisodeOfCare->Patient": 1268,
+        "Flag->Patient": 1268,
+        "Flag->Practitioner": 1268,
+        "Goal->Patient": 1268,
+        "ImagingStudy->Patient": 558,
+        "ImagingStudy->ServiceRequest": 558,
+        "Immunization->Patient": 611,
+        "List->MedicationStatement": 3551,
+        "List->Patient": 1268,
+        "List->Practitioner": 1268,
+        "MedicationAdministration->Medication": 593,
+        "MedicationAdministration->MedicationRequest": 593,
+        "MedicationAdministration->Patient": 593,
+        "MedicationDispense->Medication": 593,
+        "MedicationDispense->MedicationRequest": 593,
+        "MedicationDispense->Patient": 1558,
+        "MedicationRequest->Medication": 593,
+        "MedicationRequest->Patient": 1861,
+        "MedicationRequest->Practitioner": 593,
+        "MedicationStatement->Patient": 3551,
+        "NutritionOrder->Patient": 666,
+        "Observation->Encounter": 15216,
+        "Observation->Patient": 17117,
+        "Observation->ServiceRequest": 4437,
+        "Observation->Specimen": 4437,
+        "PractitionerRole->Location": 1268,
+        "PractitionerRole->Organization": 1268,
+        "PractitionerRole->Practitioner": 1268,
+        "Procedure->Patient": 1268,
+        "QuestionnaireResponse->Patient": 1268,
+        "RelatedPerson->Patient": 1268,
+        "Schedule->Location": 1268,
+        "Schedule->Practitioner": 1268,
+        "ServiceRequest->Encounter": 3804,
+        "ServiceRequest->Patient": 6896,
+        "ServiceRequest->Practitioner": 633,
+        "Slot->Schedule": 3804,
+        "Specimen->Patient": 5070,
+        "Specimen->ServiceRequest": 5070,
+        "SupplyDelivery->Device": 666,
+        "SupplyDelivery->Patient": 666,
+        "Task->CareTeam": 1268,
+        "Task->DocumentReference": 1268,
+        "Task->Patient": 5630,
+        "Task->ServiceRequest": 1826
+      },
+      "observation_structures": {
+        "valueQuantity": 17117
+      },
+      "reference_edge_types": 108,
+      "reference_edges": 277277,
+      "shapes_by_type": {
+        "Account": 1,
+        "AllergyIntolerance": 1,
+        "Appointment": 2,
+        "CarePlan": 1,
+        "CareTeam": 1,
+        "ChargeItem": 1,
+        "Claim": 1,
+        "Communication": 7,
+        "CommunicationRequest": 2,
+        "Composition": 1,
+        "Condition": 1,
+        "Consent": 2,
+        "Coverage": 3,
+        "CoverageEligibilityRequest": 1,
+        "CoverageEligibilityResponse": 1,
+        "Device": 2,
+        "DeviceRequest": 1,
+        "DeviceUseStatement": 1,
+        "DiagnosticReport": 4,
+        "DocumentReference": 6,
+        "Encounter": 3,
+        "EpisodeOfCare": 1,
+        "Flag": 1,
+        "Goal": 1,
+        "ImagingStudy": 1,
+        "Immunization": 1,
+        "List": 2,
+        "Location": 1,
+        "Medication": 1,
+        "MedicationAdministration": 1,
+        "MedicationDispense": 2,
+        "MedicationRequest": 2,
+        "MedicationStatement": 1,
+        "NutritionOrder": 1,
+        "Observation": 4,
+        "Organization": 2,
+        "Patient": 1,
+        "Practitioner": 1,
+        "PractitionerRole": 1,
+        "Procedure": 1,
+        "Questionnaire": 1,
+        "QuestionnaireResponse": 1,
+        "RelatedPerson": 2,
+        "Schedule": 1,
+        "ServiceRequest": 4,
+        "Slot": 1,
+        "Specimen": 3,
+        "SupplyDelivery": 2,
+        "Task": 4
+      },
+      "statuses_by_type": {
+        "Account": [
+          "active"
+        ],
+        "Appointment": [
+          "booked"
+        ],
+        "CarePlan": [
+          "active"
+        ],
+        "CareTeam": [
+          "active"
+        ],
+        "ChargeItem": [
+          "billable"
+        ],
+        "Claim": [
+          "draft"
+        ],
+        "Communication": [
+          "completed"
+        ],
+        "CommunicationRequest": [
+          "active",
+          "draft"
+        ],
+        "Composition": [
+          "final"
+        ],
+        "Consent": [
+          "active"
+        ],
+        "Coverage": [
+          "active",
+          "cancelled"
+        ],
+        "CoverageEligibilityRequest": [
+          "active"
+        ],
+        "CoverageEligibilityResponse": [
+          "active"
+        ],
+        "Device": [
+          "active"
+        ],
+        "DeviceRequest": [
+          "active"
+        ],
+        "DeviceUseStatement": [
+          "intended"
+        ],
+        "DiagnosticReport": [
+          "corrected",
+          "final"
+        ],
+        "DocumentReference": [
+          "current"
+        ],
+        "Encounter": [
+          "finished",
+          "in-progress"
+        ],
+        "EpisodeOfCare": [
+          "active"
+        ],
+        "Flag": [
+          "active"
+        ],
+        "ImagingStudy": [
+          "available"
+        ],
+        "Immunization": [
+          "completed"
+        ],
+        "List": [
+          "current"
+        ],
+        "Location": [
+          "active"
+        ],
+        "Medication": [
+          "active"
+        ],
+        "MedicationAdministration": [
+          "not-done"
+        ],
+        "MedicationDispense": [
+          "completed"
+        ],
+        "MedicationRequest": [
+          "active",
+          "draft"
+        ],
+        "MedicationStatement": [
+          "active"
+        ],
+        "NutritionOrder": [
+          "active"
+        ],
+        "Observation": [
+          "corrected",
+          "final"
+        ],
+        "Procedure": [
+          "completed"
+        ],
+        "Questionnaire": [
+          "active"
+        ],
+        "QuestionnaireResponse": [
+          "in-progress"
+        ],
+        "ServiceRequest": [
+          "active",
+          "completed"
+        ],
+        "Slot": [
+          "busy",
+          "busy-unavailable",
+          "free"
+        ],
+        "Specimen": [
+          "available",
+          "unsatisfactory"
+        ],
+        "SupplyDelivery": [
+          "completed",
+          "in-progress"
+        ],
+        "Task": [
+          "draft",
+          "in-progress",
+          "requested"
+        ]
+      }
+    },
+    "enhanced": {
+      "distinct_shapes": 138,
+      "edge_counts": {
+        "Account->Coverage": 635,
+        "Account->Patient": 635,
+        "AllergyIntolerance->Patient": 403,
+        "Appointment->Patient": 3804,
+        "Appointment->Practitioner": 1268,
+        "Appointment->PractitionerRole": 1268,
+        "Appointment->Slot": 2536,
+        "AppointmentResponse->Appointment": 1268,
+        "AppointmentResponse->Patient": 1268,
+        "CarePlan->Goal": 1268,
+        "CarePlan->Patient": 1268,
+        "CareTeam->Organization": 2536,
+        "CareTeam->Patient": 2536,
+        "CareTeam->Practitioner": 2536,
+        "CareTeam->RelatedPerson": 1268,
+        "ChargeItem->Account": 635,
+        "ChargeItem->Patient": 635,
+        "Claim->Coverage": 635,
+        "Claim->Organization": 635,
+        "Claim->Patient": 635,
+        "Communication->Encounter": 3804,
+        "Communication->MedicationRequest": 593,
+        "Communication->NutritionOrder": 666,
+        "Communication->Patient": 18859,
+        "Communication->Practitioner": 5072,
+        "Communication->PractitionerRole": 1268,
+        "Communication->RelatedPerson": 1458,
+        "Communication->ServiceRequest": 3169,
+        "Communication->Specimen": 633,
+        "CommunicationRequest->DocumentReference": 664,
+        "CommunicationRequest->Organization": 1328,
+        "CommunicationRequest->Patient": 1328,
+        "Composition->DocumentReference": 3804,
+        "Composition->Encounter": 3804,
+        "Composition->Patient": 3804,
+        "Composition->Practitioner": 3804,
+        "Condition->Patient": 3987,
+        "Consent->Organization": 664,
+        "Consent->Patient": 1932,
+        "Coverage->Organization": 3804,
+        "Coverage->Patient": 3804,
+        "CoverageEligibilityRequest->Coverage": 1903,
+        "CoverageEligibilityRequest->Organization": 3171,
+        "CoverageEligibilityRequest->Patient": 1903,
+        "CoverageEligibilityResponse->Coverage": 1903,
+        "CoverageEligibilityResponse->CoverageEligibilityRequest": 1903,
+        "CoverageEligibilityResponse->Organization": 1903,
+        "CoverageEligibilityResponse->Patient": 1903,
+        "DetectedIssue->Patient": 1268,
+        "DetectedIssue->PractitionerRole": 1268,
+        "DetectedIssue->ServiceRequest": 2536,
+        "Device->Patient": 1934,
+        "DeviceRequest->Device": 666,
+        "DeviceRequest->Patient": 666,
+        "DeviceRequest->Practitioner": 666,
+        "DeviceUseStatement->Device": 666,
+        "DeviceUseStatement->Patient": 666,
+        "DiagnosticReport->Encounter": 2536,
+        "DiagnosticReport->ImagingStudy": 558,
+        "DiagnosticReport->Observation": 6511,
+        "DiagnosticReport->Organization": 1268,
+        "DiagnosticReport->Patient": 7531,
+        "DiagnosticReport->ServiceRequest": 7531,
+        "DiagnosticReport->Specimen": 4437,
+        "DocumentManifest->DocumentReference": 3804,
+        "DocumentManifest->Organization": 1268,
+        "DocumentManifest->Patient": 1268,
+        "DocumentManifest->PractitionerRole": 1268,
+        "DocumentReference->Encounter": 9406,
+        "DocumentReference->Patient": 22035,
+        "DocumentReference->Practitioner": 10093,
+        "DocumentReference->PractitionerRole": 3804,
+        "Encounter->EpisodeOfCare": 3804,
+        "Encounter->Location": 1268,
+        "Encounter->Organization": 1268,
+        "Encounter->Patient": 12616,
+        "Encounter->Practitioner": 3804,
+        "Encounter->PractitionerRole": 1268,
+        "EpisodeOfCare->CareTeam": 1268,
+        "EpisodeOfCare->Organization": 2536,
+        "EpisodeOfCare->Patient": 2536,
+        "EpisodeOfCare->PractitionerRole": 1268,
+        "Flag->Patient": 1268,
+        "Flag->Practitioner": 1268,
+        "Goal->Patient": 1268,
+        "HealthcareService->Location": 1268,
+        "HealthcareService->Organization": 1268,
+        "ImagingStudy->Patient": 558,
+        "ImagingStudy->ServiceRequest": 558,
+        "Immunization->Patient": 611,
+        "List->DocumentReference": 3804,
+        "List->MedicationStatement": 3551,
+        "List->Patient": 2536,
+        "List->Practitioner": 1268,
+        "List->PractitionerRole": 1268,
+        "Location->Organization": 318,
+        "MedicationAdministration->Medication": 593,
+        "MedicationAdministration->MedicationRequest": 593,
+        "MedicationAdministration->Patient": 593,
+        "MedicationDispense->Medication": 1227,
+        "MedicationDispense->MedicationRequest": 1861,
+        "MedicationDispense->Patient": 2826,
+        "MedicationRequest->Medication": 1227,
+        "MedicationRequest->Patient": 3129,
+        "MedicationRequest->Practitioner": 593,
+        "MedicationRequest->PractitionerRole": 1268,
+        "MedicationStatement->Medication": 1268,
+        "MedicationStatement->MedicationDispense": 1268,
+        "MedicationStatement->Patient": 5867,
+        "MedicationStatement->RelatedPerson": 220,
+        "NutritionOrder->Patient": 666,
+        "Observation->Encounter": 16484,
+        "Observation->MedicationRequest": 1268,
+        "Observation->Observation": 388,
+        "Observation->Organization": 1194,
+        "Observation->Patient": 27795,
+        "Observation->PractitionerRole": 1182,
+        "Observation->RelatedPerson": 660,
+        "Observation->ServiceRequest": 6899,
+        "Observation->Specimen": 5631,
+        "PractitionerRole->Location": 1268,
+        "PractitionerRole->Organization": 1586,
+        "PractitionerRole->Practitioner": 1586,
+        "Procedure->Patient": 1268,
+        "QuestionnaireResponse->Patient": 3584,
+        "QuestionnaireResponse->RelatedPerson": 220,
+        "RelatedPerson->Patient": 1488,
+        "Schedule->Location": 1268,
+        "Schedule->Practitioner": 1268,
+        "Schedule->PractitionerRole": 1268,
+        "ServiceRequest->Encounter": 5072,
+        "ServiceRequest->Organization": 1268,
+        "ServiceRequest->Patient": 9432,
+        "ServiceRequest->Practitioner": 633,
+        "ServiceRequest->PractitionerRole": 1268,
+        "Slot->Schedule": 5072,
+        "Specimen->Patient": 6338,
+        "Specimen->ServiceRequest": 6338,
+        "SupplyDelivery->Device": 666,
+        "SupplyDelivery->Patient": 666,
+        "Task->CareTeam": 1268,
+        "Task->Communication": 2536,
+        "Task->DetectedIssue": 1268,
+        "Task->DocumentManifest": 1268,
+        "Task->DocumentReference": 1268,
+        "Task->EpisodeOfCare": 1268,
+        "Task->HealthcareService": 1268,
+        "Task->List": 1268,
+        "Task->Patient": 9434,
+        "Task->PractitionerRole": 1268,
+        "Task->ServiceRequest": 1826
+      },
+      "observation_structures": {
+        "component": 1394,
+        "dataAbsentReason": 1585,
+        "hasMember": 214,
+        "valueBoolean": 317,
+        "valueCodeableConcept": 1585,
+        "valueQuantity": 19239,
+        "valueString": 317
+      },
+      "reference_edge_types": 151,
+      "reference_edges": 416809,
+      "shapes_by_type": {
+        "Account": 1,
+        "AllergyIntolerance": 1,
+        "Appointment": 2,
+        "AppointmentResponse": 1,
+        "CarePlan": 1,
+        "CareTeam": 2,
+        "ChargeItem": 1,
+        "Claim": 1,
+        "Communication": 8,
+        "CommunicationRequest": 2,
+        "Composition": 1,
+        "Condition": 1,
+        "Consent": 2,
+        "Coverage": 4,
+        "CoverageEligibilityRequest": 2,
+        "CoverageEligibilityResponse": 3,
+        "DetectedIssue": 1,
+        "Device": 2,
+        "DeviceRequest": 1,
+        "DeviceUseStatement": 1,
+        "DiagnosticReport": 9,
+        "DocumentManifest": 1,
+        "DocumentReference": 6,
+        "Encounter": 4,
+        "EpisodeOfCare": 2,
+        "Flag": 1,
+        "Goal": 1,
+        "HealthcareService": 1,
+        "ImagingStudy": 1,
+        "Immunization": 1,
+        "List": 3,
+        "Location": 2,
+        "Medication": 2,
+        "MedicationAdministration": 1,
+        "MedicationDispense": 6,
+        "MedicationRequest": 4,
+        "MedicationStatement": 2,
+        "NutritionOrder": 1,
+        "Observation": 18,
+        "Organization": 2,
+        "Patient": 1,
+        "Practitioner": 2,
+        "PractitionerRole": 2,
+        "Procedure": 1,
+        "Questionnaire": 2,
+        "QuestionnaireResponse": 2,
+        "RelatedPerson": 3,
+        "Schedule": 1,
+        "ServiceRequest": 5,
+        "Slot": 1,
+        "Specimen": 4,
+        "SupplyDelivery": 2,
+        "Task": 6
+      },
+      "statuses_by_type": {
+        "Account": [
+          "active"
+        ],
+        "Appointment": [
+          "booked"
+        ],
+        "CarePlan": [
+          "active"
+        ],
+        "CareTeam": [
+          "active"
+        ],
+        "ChargeItem": [
+          "billable"
+        ],
+        "Claim": [
+          "draft"
+        ],
+        "Communication": [
+          "completed"
+        ],
+        "CommunicationRequest": [
+          "active",
+          "draft"
+        ],
+        "Composition": [
+          "final"
+        ],
+        "Consent": [
+          "active"
+        ],
+        "Coverage": [
+          "active",
+          "cancelled"
+        ],
+        "CoverageEligibilityRequest": [
+          "active"
+        ],
+        "CoverageEligibilityResponse": [
+          "active"
+        ],
+        "DetectedIssue": [
+          "final"
+        ],
+        "Device": [
+          "active"
+        ],
+        "DeviceRequest": [
+          "active"
+        ],
+        "DeviceUseStatement": [
+          "intended"
+        ],
+        "DiagnosticReport": [
+          "cancelled",
+          "corrected",
+          "final",
+          "registered"
+        ],
+        "DocumentManifest": [
+          "current"
+        ],
+        "DocumentReference": [
+          "current"
+        ],
+        "Encounter": [
+          "finished",
+          "in-progress"
+        ],
+        "EpisodeOfCare": [
+          "active"
+        ],
+        "Flag": [
+          "active"
+        ],
+        "ImagingStudy": [
+          "available"
+        ],
+        "Immunization": [
+          "completed"
+        ],
+        "List": [
+          "current"
+        ],
+        "Location": [
+          "active"
+        ],
+        "Medication": [
+          "active"
+        ],
+        "MedicationAdministration": [
+          "not-done"
+        ],
+        "MedicationDispense": [
+          "completed",
+          "preparation"
+        ],
+        "MedicationRequest": [
+          "active",
+          "draft"
+        ],
+        "MedicationStatement": [
+          "active",
+          "unknown"
+        ],
+        "NutritionOrder": [
+          "active"
+        ],
+        "Observation": [
+          "corrected",
+          "final"
+        ],
+        "Procedure": [
+          "completed"
+        ],
+        "Questionnaire": [
+          "active"
+        ],
+        "QuestionnaireResponse": [
+          "completed",
+          "in-progress"
+        ],
+        "ServiceRequest": [
+          "active",
+          "completed"
+        ],
+        "Slot": [
+          "busy",
+          "busy-unavailable",
+          "free"
+        ],
+        "Specimen": [
+          "available",
+          "unavailable",
+          "unsatisfactory"
+        ],
+        "SupplyDelivery": [
+          "completed",
+          "in-progress"
+        ],
+        "Task": [
+          "draft",
+          "in-progress",
+          "requested"
+        ]
+      }
+    }
+  },
+  "tasks": {
+    "dev": 2986,
+    "heldout": 9969,
+    "public": 7428,
+    "train": 26730
+  },
+  "validation": "R4 schema + definition-derived nested cardinality/choice/reference contracts + local graph; run independent validator and reference replay before release",
+  "variants": {
+    "corrected:components": 106,
+    "corrected:individual": 104,
+    "corrected:members": 107,
+    "final:components": 106,
+    "final:individual": 104,
+    "final:members": 107,
+    "pending:components": 106,
+    "pending:individual": 104,
+    "pending:members": 107,
+    "rejected:components": 106,
+    "rejected:individual": 104,
+    "rejected:members": 107
+  },
+  "version": "0.4.0"
+}

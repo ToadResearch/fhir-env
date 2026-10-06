@@ -7,7 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from fhir_workflows.experiments import summarize
+from fhir_query_rl.experiments import summarize
 
 
 def plots(report, output):

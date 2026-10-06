@@ -7,8 +7,8 @@ from datetime import date
 
 import pytest
 
-from fhir_workflows.dataset import demo_source, make_world
-from fhir_workflows.validation import ref, validate_graph
+from fhir_query_rl.dataset import demo_source, make_world
+from fhir_query_rl.validation import ref, validate_graph
 
 
 @pytest.mark.parametrize("baseline_age", [0, 15])

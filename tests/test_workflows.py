@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from fhir_workflows.dataset import build_dataset, load_jsonl, MRN_SYSTEM
-from fhir_workflows.cli import replay_task
-from fhir_workflows.scoring import evaluate, state_success
-from fhir_workflows.sql import query
-from fhir_workflows.store import FhirStore
-from fhir_workflows.validation import patient_ref, ref
-from fhir_workflows.helpers import (
+from fhir_query_rl.dataset import build_dataset, load_jsonl, MRN_SYSTEM
+from fhir_query_rl.cli import replay_task
+from fhir_query_rl.scoring import evaluate, state_success
+from fhir_query_rl.sql import query
+from fhir_query_rl.store import FhirStore
+from fhir_query_rl.validation import patient_ref, ref
+from fhir_query_rl.helpers import (
     find_patient,
     fhir_schema,
     read_document,
@@ -329,7 +329,7 @@ def test_current_training_config_legacy_bridge():
 
 
 def test_verifiers_loader_and_tool_dispatch(corpus):
-    from fhir_workflows import load_environment
+    from fhir_query_rl import load_environment
     import verifiers as vf
 
     env = load_environment(data_dir=str(corpus[0]), query_mode="hybrid")
@@ -458,7 +458,7 @@ def test_document_helper_decodes_visible_narrative_and_schema_is_static(corpus):
 
 
 def test_assistance_ablation_preserves_dataset_and_gold(corpus):
-    from fhir_workflows.fhir_workflows import load_environment
+    from fhir_query_rl.fhir_query_rl import load_environment
 
     root, _ = corpus
     raw = load_environment(data_dir=str(root), tool_profile="raw", max_examples=12)
@@ -488,7 +488,7 @@ def test_longitudinal_narratives_are_linked_and_do_not_modify_source_list(corpus
 
 def test_literal_no_tools_control_is_read_only_and_supplies_visible_context(corpus):
     import verifiers as vf
-    from fhir_workflows.fhir_workflows import load_environment
+    from fhir_query_rl.fhir_query_rl import load_environment
 
     root, _ = corpus
     env = load_environment(
@@ -518,7 +518,7 @@ def test_literal_no_tools_control_is_read_only_and_supplies_visible_context(corp
 
 
 def test_pediatric_reporter_and_correlated_weight_history():
-    from fhir_workflows.dataset import demo_source, make_world
+    from fhir_query_rl.dataset import demo_source, make_world
 
     source = copy.deepcopy(demo_source()[0])
     source["age"] = 3

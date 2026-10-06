@@ -2,10 +2,10 @@
 
 import pytest
 
-from fhir_workflows.dataset import compile_tasks, demo_source, make_world
-from fhir_workflows.scoring import evaluate
-from fhir_workflows.sql import query
-from fhir_workflows.store import FhirStore
+from fhir_query_rl.dataset import compile_tasks, demo_source, make_world
+from fhir_query_rl.scoring import evaluate
+from fhir_query_rl.sql import query
+from fhir_query_rl.store import FhirStore
 
 
 @pytest.fixture

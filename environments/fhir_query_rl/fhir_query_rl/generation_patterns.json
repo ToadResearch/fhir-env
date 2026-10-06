@@ -1,0 +1,762 @@
+{
+  "fhir_version": "4.0.1",
+  "sources": [
+    {
+      "file": "observation-example-bloodpressure.json",
+      "url": "https://hl7.org/fhir/R4/observation-example-bloodpressure.json",
+      "sha256": "458ed58f88940fd4479bc7e9a2b8340f7353549ae40ac8c9146eef77b500e06c",
+      "resourceType": "Observation"
+    },
+    {
+      "file": "diagnosticreport-example-lipids.json",
+      "url": "https://hl7.org/fhir/R4/diagnosticreport-example-lipids.json",
+      "sha256": "042176c9daef677ae73c58593e992ee08b65dfc82ca78458e0aacdcf9d402389",
+      "resourceType": "Bundle"
+    },
+    {
+      "file": "appointment-example.json",
+      "url": "https://hl7.org/fhir/R4/appointment-example.json",
+      "sha256": "5bb8ab43044c648178d401852d53125d92f04c608f969754eeeb67ae59986905",
+      "resourceType": "Appointment"
+    },
+    {
+      "file": "specimen-example.json",
+      "url": "https://hl7.org/fhir/R4/specimen-example.json",
+      "sha256": "81ba863e53209a10d8d62d93e43cc49e364151a57c24d84fd44ff7b8dc68f5dd",
+      "resourceType": "Specimen"
+    },
+    {
+      "file": "observation.profile.json",
+      "url": "https://hl7.org/fhir/R4/observation.profile.json",
+      "sha256": "41c731c85517d49c506141606418fdd3cf700a6d448e1d4e4846aac4e7c81c99",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "diagnosticreport.profile.json",
+      "url": "https://hl7.org/fhir/R4/diagnosticreport.profile.json",
+      "sha256": "a2d68a05690261e288f1e292edaf7f458f9bc99052cb26b3e1b79ec75268b616",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "servicerequest.profile.json",
+      "url": "https://hl7.org/fhir/R4/servicerequest.profile.json",
+      "sha256": "5b4a0fea9bd920406e4b9830eaad7fc9b0fe5f2b626568192391c3a3507959e9",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "specimen.profile.json",
+      "url": "https://hl7.org/fhir/R4/specimen.profile.json",
+      "sha256": "31bfc50c1c16e06ce98060eccb3af5ddcd3af419cd47841a4cbe66ff929b3b97",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "medicationrequest.profile.json",
+      "url": "https://hl7.org/fhir/R4/medicationrequest.profile.json",
+      "sha256": "eee87fafe924726c561f323f43341794c1baa9c6a2cb4c42ae2a6da5a3134cdd",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "medicationdispense.profile.json",
+      "url": "https://hl7.org/fhir/R4/medicationdispense.profile.json",
+      "sha256": "cb0a16e089ea3c851d60f06f905de629915eb7a3f19dceb82a31dd0bdccdd2bc",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "appointment.profile.json",
+      "url": "https://hl7.org/fhir/R4/appointment.profile.json",
+      "sha256": "7888cfa85c8ca9cf5f1f06dc15d645a3652eff559a19c2c280612af3089de1a8",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "slot.profile.json",
+      "url": "https://hl7.org/fhir/R4/slot.profile.json",
+      "sha256": "80e373cb01efcdde42dcedc8026b96e8190ba40393491aa3176892eed22bc002",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "task.profile.json",
+      "url": "https://hl7.org/fhir/R4/task.profile.json",
+      "sha256": "6411816b110c06988f8d7fd20a4eabd24c256f00e5e55ebb25db30f39b8c3ad2",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "communication.profile.json",
+      "url": "https://hl7.org/fhir/R4/communication.profile.json",
+      "sha256": "acbaf2bfe170a6ae61aeb8a46f1199b239dc354af3d1a4daab34c7d11b66165e",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "coverage.profile.json",
+      "url": "https://hl7.org/fhir/R4/coverage.profile.json",
+      "sha256": "a0f97e7bb1109648dbb9305a170aa1e11de40a8bb793e52079b87d51b4fad962",
+      "resourceType": "StructureDefinition"
+    },
+    {
+      "file": "coverageeligibilityresponse.profile.json",
+      "url": "https://hl7.org/fhir/R4/coverageeligibilityresponse.profile.json",
+      "sha256": "655e9572c8667f26231e86933078928d92b4cb043086df41fb63a9735bd87458",
+      "resourceType": "StructureDefinition"
+    }
+  ],
+  "blood_pressure": {
+    "code": {
+      "coding": [
+        {
+          "system": "http://loinc.org",
+          "code": "85354-9",
+          "display": "Blood pressure panel with all children optional"
+        }
+      ],
+      "text": "Blood pressure systolic & diastolic"
+    },
+    "component_codes": [
+      {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8480-6",
+            "display": "Systolic blood pressure"
+          },
+          {
+            "system": "http://snomed.info/sct",
+            "code": "271649006",
+            "display": "Systolic blood pressure"
+          },
+          {
+            "system": "http://acme.org/devices/clinical-codes",
+            "code": "bp-s",
+            "display": "Systolic Blood pressure"
+          }
+        ]
+      },
+      {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "8462-4",
+            "display": "Diastolic blood pressure"
+          }
+        ]
+      }
+    ]
+  },
+  "lipid_tests": [
+    {
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "35200-5",
+            "display": "Cholesterol [Moles/\u200bvolume] in Serum or Plasma"
+          }
+        ],
+        "text": "Cholesterol"
+      },
+      "unit": "mmol/L",
+      "unit_code": "mmol/L"
+    },
+    {
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "35217-9",
+            "display": "Triglyceride [Moles/\u200bvolume] in Serum or Plasma"
+          }
+        ],
+        "text": "Triglyceride"
+      },
+      "unit": "mmol/L",
+      "unit_code": "mmol/L"
+    }
+  ],
+  "contracts": {
+    "Observation": {
+      "required": [
+        "status",
+        "code"
+      ],
+      "choices": {
+        "effective[x]": [
+          "dateTime",
+          "Period",
+          "Timing",
+          "instant"
+        ],
+        "value[x]": [
+          "Quantity",
+          "CodeableConcept",
+          "string",
+          "boolean",
+          "integer",
+          "Range",
+          "Ratio",
+          "SampledData",
+          "time",
+          "dateTime",
+          "Period"
+        ]
+      },
+      "references": {
+        "basedOn": [
+          "CarePlan",
+          "DeviceRequest",
+          "ImmunizationRecommendation",
+          "MedicationRequest",
+          "NutritionOrder",
+          "ServiceRequest"
+        ],
+        "partOf": [
+          "MedicationAdministration",
+          "MedicationDispense",
+          "MedicationStatement",
+          "Procedure",
+          "Immunization",
+          "ImagingStudy"
+        ],
+        "subject": [
+          "Patient",
+          "Group",
+          "Device",
+          "Location"
+        ],
+        "focus": [
+          "Resource"
+        ],
+        "encounter": [
+          "Encounter"
+        ],
+        "performer": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "CareTeam",
+          "Patient",
+          "RelatedPerson"
+        ],
+        "specimen": [
+          "Specimen"
+        ],
+        "device": [
+          "Device",
+          "DeviceMetric"
+        ],
+        "hasMember": [
+          "Observation",
+          "QuestionnaireResponse",
+          "MolecularSequence"
+        ],
+        "derivedFrom": [
+          "DocumentReference",
+          "ImagingStudy",
+          "Media",
+          "QuestionnaireResponse",
+          "Observation",
+          "MolecularSequence"
+        ]
+      }
+    },
+    "DiagnosticReport": {
+      "required": [
+        "status",
+        "code"
+      ],
+      "choices": {
+        "effective[x]": [
+          "dateTime",
+          "Period"
+        ]
+      },
+      "references": {
+        "basedOn": [
+          "CarePlan",
+          "ImmunizationRecommendation",
+          "MedicationRequest",
+          "NutritionOrder",
+          "ServiceRequest"
+        ],
+        "subject": [
+          "Patient",
+          "Group",
+          "Device",
+          "Location"
+        ],
+        "encounter": [
+          "Encounter"
+        ],
+        "performer": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "CareTeam"
+        ],
+        "resultsInterpreter": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "CareTeam"
+        ],
+        "specimen": [
+          "Specimen"
+        ],
+        "result": [
+          "Observation"
+        ],
+        "imagingStudy": [
+          "ImagingStudy"
+        ]
+      }
+    },
+    "ServiceRequest": {
+      "required": [
+        "status",
+        "intent",
+        "subject"
+      ],
+      "choices": {
+        "quantity[x]": [
+          "Quantity",
+          "Ratio",
+          "Range"
+        ],
+        "occurrence[x]": [
+          "dateTime",
+          "Period",
+          "Timing"
+        ],
+        "asNeeded[x]": [
+          "boolean",
+          "CodeableConcept"
+        ]
+      },
+      "references": {
+        "basedOn": [
+          "CarePlan",
+          "ServiceRequest",
+          "MedicationRequest"
+        ],
+        "replaces": [
+          "ServiceRequest"
+        ],
+        "subject": [
+          "Patient",
+          "Group",
+          "Location",
+          "Device"
+        ],
+        "encounter": [
+          "Encounter"
+        ],
+        "requester": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "Patient",
+          "RelatedPerson",
+          "Device"
+        ],
+        "performer": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "CareTeam",
+          "HealthcareService",
+          "Patient",
+          "Device",
+          "RelatedPerson"
+        ],
+        "locationReference": [
+          "Location"
+        ],
+        "reasonReference": [
+          "Condition",
+          "Observation",
+          "DiagnosticReport",
+          "DocumentReference"
+        ],
+        "insurance": [
+          "Coverage",
+          "ClaimResponse"
+        ],
+        "supportingInfo": [
+          "Resource"
+        ],
+        "specimen": [
+          "Specimen"
+        ],
+        "relevantHistory": [
+          "Provenance"
+        ]
+      }
+    },
+    "Specimen": {
+      "required": [],
+      "choices": {},
+      "references": {
+        "subject": [
+          "Patient",
+          "Group",
+          "Device",
+          "Substance",
+          "Location"
+        ],
+        "parent": [
+          "Specimen"
+        ],
+        "request": [
+          "ServiceRequest"
+        ]
+      }
+    },
+    "MedicationRequest": {
+      "required": [
+        "status",
+        "intent",
+        "medication[x]",
+        "subject"
+      ],
+      "choices": {
+        "reported[x]": [
+          "boolean",
+          "Reference"
+        ],
+        "medication[x]": [
+          "CodeableConcept",
+          "Reference"
+        ]
+      },
+      "references": {
+        "reported[x]": [
+          "Patient",
+          "Practitioner",
+          "PractitionerRole",
+          "RelatedPerson",
+          "Organization"
+        ],
+        "medication[x]": [
+          "Medication"
+        ],
+        "subject": [
+          "Patient",
+          "Group"
+        ],
+        "encounter": [
+          "Encounter"
+        ],
+        "supportingInformation": [
+          "Resource"
+        ],
+        "requester": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "Patient",
+          "RelatedPerson",
+          "Device"
+        ],
+        "performer": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "Patient",
+          "Device",
+          "RelatedPerson",
+          "CareTeam"
+        ],
+        "recorder": [
+          "Practitioner",
+          "PractitionerRole"
+        ],
+        "reasonReference": [
+          "Condition",
+          "Observation"
+        ],
+        "basedOn": [
+          "CarePlan",
+          "MedicationRequest",
+          "ServiceRequest",
+          "ImmunizationRecommendation"
+        ],
+        "insurance": [
+          "Coverage",
+          "ClaimResponse"
+        ],
+        "priorPrescription": [
+          "MedicationRequest"
+        ],
+        "detectedIssue": [
+          "DetectedIssue"
+        ],
+        "eventHistory": [
+          "Provenance"
+        ]
+      }
+    },
+    "MedicationDispense": {
+      "required": [
+        "status",
+        "medication[x]"
+      ],
+      "choices": {
+        "statusReason[x]": [
+          "CodeableConcept",
+          "Reference"
+        ],
+        "medication[x]": [
+          "CodeableConcept",
+          "Reference"
+        ]
+      },
+      "references": {
+        "partOf": [
+          "Procedure"
+        ],
+        "statusReason[x]": [
+          "DetectedIssue"
+        ],
+        "medication[x]": [
+          "Medication"
+        ],
+        "subject": [
+          "Patient",
+          "Group"
+        ],
+        "context": [
+          "Encounter",
+          "EpisodeOfCare"
+        ],
+        "supportingInformation": [
+          "Resource"
+        ],
+        "location": [
+          "Location"
+        ],
+        "authorizingPrescription": [
+          "MedicationRequest"
+        ],
+        "destination": [
+          "Location"
+        ],
+        "receiver": [
+          "Patient",
+          "Practitioner"
+        ],
+        "detectedIssue": [
+          "DetectedIssue"
+        ],
+        "eventHistory": [
+          "Provenance"
+        ]
+      }
+    },
+    "Appointment": {
+      "required": [
+        "status",
+        "participant"
+      ],
+      "choices": {},
+      "references": {
+        "reasonReference": [
+          "Condition",
+          "Procedure",
+          "Observation",
+          "ImmunizationRecommendation"
+        ],
+        "supportingInformation": [
+          "Resource"
+        ],
+        "slot": [
+          "Slot"
+        ],
+        "basedOn": [
+          "ServiceRequest"
+        ]
+      }
+    },
+    "Slot": {
+      "required": [
+        "schedule",
+        "status",
+        "start",
+        "end"
+      ],
+      "choices": {},
+      "references": {
+        "schedule": [
+          "Schedule"
+        ]
+      }
+    },
+    "Task": {
+      "required": [
+        "status",
+        "intent"
+      ],
+      "choices": {},
+      "references": {
+        "basedOn": [
+          "Resource"
+        ],
+        "partOf": [
+          "Task"
+        ],
+        "focus": [
+          "Resource"
+        ],
+        "for": [
+          "Resource"
+        ],
+        "encounter": [
+          "Encounter"
+        ],
+        "requester": [
+          "Device",
+          "Organization",
+          "Patient",
+          "Practitioner",
+          "PractitionerRole",
+          "RelatedPerson"
+        ],
+        "owner": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization",
+          "CareTeam",
+          "HealthcareService",
+          "Patient",
+          "Device",
+          "RelatedPerson"
+        ],
+        "location": [
+          "Location"
+        ],
+        "reasonReference": [
+          "Resource"
+        ],
+        "insurance": [
+          "Coverage",
+          "ClaimResponse"
+        ],
+        "relevantHistory": [
+          "Provenance"
+        ]
+      }
+    },
+    "Communication": {
+      "required": [
+        "status"
+      ],
+      "choices": {},
+      "references": {
+        "basedOn": [
+          "Resource"
+        ],
+        "partOf": [
+          "Resource"
+        ],
+        "inResponseTo": [
+          "Communication"
+        ],
+        "subject": [
+          "Patient",
+          "Group"
+        ],
+        "about": [
+          "Resource"
+        ],
+        "encounter": [
+          "Encounter"
+        ],
+        "recipient": [
+          "Device",
+          "Organization",
+          "Patient",
+          "Practitioner",
+          "PractitionerRole",
+          "RelatedPerson",
+          "Group",
+          "CareTeam",
+          "HealthcareService"
+        ],
+        "sender": [
+          "Device",
+          "Organization",
+          "Patient",
+          "Practitioner",
+          "PractitionerRole",
+          "RelatedPerson",
+          "HealthcareService"
+        ],
+        "reasonReference": [
+          "Condition",
+          "Observation",
+          "DiagnosticReport",
+          "DocumentReference"
+        ]
+      }
+    },
+    "Coverage": {
+      "required": [
+        "status",
+        "beneficiary",
+        "payor"
+      ],
+      "choices": {},
+      "references": {
+        "policyHolder": [
+          "Patient",
+          "RelatedPerson",
+          "Organization"
+        ],
+        "subscriber": [
+          "Patient",
+          "RelatedPerson"
+        ],
+        "beneficiary": [
+          "Patient"
+        ],
+        "payor": [
+          "Organization",
+          "Patient",
+          "RelatedPerson"
+        ],
+        "contract": [
+          "Contract"
+        ]
+      }
+    },
+    "CoverageEligibilityResponse": {
+      "required": [
+        "status",
+        "purpose",
+        "patient",
+        "created",
+        "request",
+        "outcome",
+        "insurer"
+      ],
+      "choices": {
+        "serviced[x]": [
+          "date",
+          "Period"
+        ]
+      },
+      "references": {
+        "patient": [
+          "Patient"
+        ],
+        "requestor": [
+          "Practitioner",
+          "PractitionerRole",
+          "Organization"
+        ],
+        "request": [
+          "CoverageEligibilityRequest"
+        ],
+        "insurer": [
+          "Organization"
+        ]
+      }
+    }
+  }
+}

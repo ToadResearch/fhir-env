@@ -8,11 +8,11 @@ import json
 import inspect
 from pathlib import Path
 
-from fhir_workflows.cli import replay_task
-from fhir_workflows.dataset import load_jsonl
-from fhir_workflows.discovery import FAMILIES, discovery_variant
-from fhir_workflows.fhir_workflows import read_shard
-from fhir_workflows.metrics import task_dimensions
+from fhir_query_rl.cli import replay_task
+from fhir_query_rl.dataset import load_jsonl
+from fhir_query_rl.discovery import FAMILIES, discovery_variant
+from fhir_query_rl.fhir_query_rl import read_shard
+from fhir_query_rl.metrics import task_dimensions
 
 
 def main():

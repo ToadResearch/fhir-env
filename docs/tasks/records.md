@@ -20,3 +20,15 @@ A shortened synthetic dev example under an explicitly fictional records-release 
 **Expected answer:** `{"authorization_current": false, "release_sent": false}`. An active Consent status does not override its expired scope.
 
 <!-- Source: dev task f554e7452c250604ad7a3f0b; family records_release_scope_review. -->
+
+## Discover a transfer packet and log transmission · R / CRU
+
+**Request:** “Open the supplied transfer handoff identifier. Find its care episode, team, packet list and manifest, then read each requested document. The coordinator now confirms transmission; record that event and complete the handoff.”
+
+`Task.input → List.entry → DocumentReference` identifies the packet contents. `Task.focus → EpisodeOfCare.team → CareTeam` identifies the coordination context. `DocumentManifest.content` describes the grouped documents.
+
+**Chart change:** Atomically complete the Task and create a Communication about the manifest. Record transmission; leave receipt unconfirmed. Preserve the original documents and episode history.
+
+**Expected answer:** `{"document_count": 3, "episode_status": "active", "receipt_documented": false}`. The read-only variant stops after retrieving the packet.
+
+<!-- v0.4.0 families: transfer_packet_search, record_transfer_transmission. -->

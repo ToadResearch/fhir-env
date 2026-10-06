@@ -2,11 +2,13 @@
 
 A synthetic EHR benchmark and **Verifiers/PrimeRL environment** for reinforcement learning of FHIR R4 search and **create, read, update and delete** operations. The immediate research question is whether RL improves accurate, efficient querying and requested chart changes. The long-term goal is a general EHR search agent.
 
-This extends the existing benchmark and preserves its CRUD tasks. The current environment is **v0.3.1**, over the frozen **v0.3.0 corpus**. Development is local; no training or external publication is part of this revision. The Python package and loader retain `fhir_workflows` for compatibility; the CLI also exposes `fhir-query-rl`.
+This extends the existing benchmark and preserves its CRUD tasks. The current environment and corpus are **v0.4.0**; the original **v0.3.0 corpus** remains an unchanged comparison. Development is local; no training or external publication is part of this revision. The environment directory and Python package are `fhir_query_rl`; the CLI and distribution name are `fhir-query-rl`.
+
+The package was renamed from `fhir_workflows`. Install from `environments/fhir_query_rl` and import `load_environment` from `fhir_query_rl`. Existing `https://fhir-workflows.example/...` identifiers remain stable inside the frozen charts; they are data namespaces, not package paths.
 
 ## Data and workflows
 
-The [Synthetic Hospital](https://github.com/sparkcpark/synthetic_hospital) expansion contains **1,268 patients**, **50 FHIR resource types**, **139,109 resources excluding Provenance**, and **34,433 tasks in 37 families**. All 5,602 source notes and original profiles are preserved. Authored, seeded episodes add linked longitudinal clinical and administrative records, age-eligible narratives, timestamps, omissions and distractors.
+The [Synthetic Hospital](https://github.com/sparkcpark/synthetic_hospital) expansion contains **1,268 patients**, **54 FHIR resource types**, **189,347 resources excluding Provenance**, and **47,113 tasks in 47 families**. All 5,602 source notes and original profiles are preserved. Authored, seeded episodes add linked longitudinal clinical and administrative records, age-eligible narratives, timestamps, omissions and distractors.
 
 Patient splits are **720 train / 80 dev / 200 public / 268 heldout**. Packaged environment data contains train/dev only. Task counts are correlated instances of shared templates; patient holdout does not establish unseen-workflow generalization.
 
@@ -21,7 +23,7 @@ Synthetic Hospital: 1,268 patients + 5,602 encounter notes
                 +-------------+-------------+
                 |                           |
          PRESERVE AND MAP              GENERATE ADDITIONS
-         Original notes/profiles       Authored scenarios + patient seed
+         Original notes/profiles       Authored event plans + patient seed
          -> DocumentReference          -> Labs, orders, reports, messages,
          Explicit facts/visits            medications and admin workflows
          -> Encounter, Condition,      -> Matching synthetic notes,
@@ -35,15 +37,30 @@ Synthetic Hospital: 1,268 patients + 5,602 encounter notes
                  Compile requests, required evidence,
                  expected answers and CRUD changes
                               |
-                 Schema/graph checks + reference replay
+                 R4 structural/graph checks + EVERY reference replay
+                 Independent dev validation + manual inspection
                               |
-                 50 FHIR types / 34,433 base tasks
-                 139,109 resources excluding Provenance
+                 54 FHIR types / 47,113 base tasks
+                 189,347 resources excluding Provenance
 ```
 
-**All 17,117 Observations, including lab results and measurements, are generated fixtures.** They were not extracted from the source notes. Of the 139,109 non-Provenance resources, **117,428 are generated additions** and **21,681 are source-derived or mixed mappings**. Source notes remain preserved; generated episodes still need clinical review and checks for contradictions with those notes.
+**All 24,651 Observations, including lab results and measurements, are generated fixtures.** They were not extracted from the source notes. Of the 189,347 non-Provenance resources, **167,666 are generated additions** and **21,681 are source-derived or mixed mappings**. Source notes remain preserved; generated episodes still need clinical review and checks for contradictions with those notes.
 
-The code lives in [the importer and task compiler](environments/fhir_workflows/fhir_workflows/dataset.py), [longitudinal episode templates](environments/fhir_workflows/fhir_workflows/longitudinal.py), and [clinical/administrative scenario templates](environments/fhir_workflows/fhir_workflows/scenarios.py). See the [data card](docs/dataset-card.md) for provenance details.
+The current augmentation pipeline lives in [generation.py](environments/fhir_query_rl/fhir_query_rl/generation.py), with [FHIR structure contracts](environments/fhir_query_rl/fhir_query_rl/resource_contracts.py). It extends [the original importer and task compiler](environments/fhir_query_rl/fhir_query_rl/dataset.py), [longitudinal episode templates](environments/fhir_query_rl/fhir_query_rl/longitudinal.py), and [clinical/administrative scenario templates](environments/fhir_query_rl/fhir_query_rl/scenarios.py). See the [data card](docs/dataset-card.md) for provenance details.
+
+The [new pipeline and measured comparison](docs/generation-pipeline.md) combines the original coverage with the pilot’s standards-derived structures: component/member panels, correction history, unknown reports, shared facilities and multi-hop transfer packets. It retains every original family and adds ten. All **47,113 reference plans pass**; independent R4 validation of complete dev charts finds **0 errors versus 67 originally**, with terminology disabled and warnings remaining. These checks establish benchmark executability, rather than trained-model or clinical performance. [Resource counts](docs/resource-counts-v0.4.0.md) show all types and totals.
+
+### Reproducibility
+
+**Data generation is deterministic** given identical source data, seed, generator code, runtime and FHIR definitions. Resources, synthetic narratives, tasks, gold answers and history sidecars reproduce identically; repeated-build tests compare manifests and file checksums. Parallel workers preserve output ordering. Manifests record input/output checksums and generator/definition hashes. Model rollouts, training results and validator execution times are not guaranteed to be deterministic.
+
+To reproduce the current augmentation from the preserved baseline, use a new output directory:
+
+```bash
+fhir-query-rl enhance \
+  --source data/synthetic-hospital-v0.3.0 \
+  --output data/reproduced-v0.4.0 --seed 17 --workers 8
+```
 
 ## Task examples
 
@@ -67,7 +84,7 @@ Patient reports, delivery, dispensing, acknowledgement and confirmed observation
 
 `discovery_variants=true` adds **838 train and 89 dev cases in three additional families**, using the same charts and original allowed mutations. The agent must discover secondary references rather than receive their business identifiers. These variants include referral closure, atomic acknowledgement logging plus Task completion, and insurance/account checks before draft-claim deletion. Their declared discovery depth is four; includes, chaining and joins may combine calls.
 
-The original 37 families remain available by default. See [the current design](docs/benchmark-design.md), [referral discovery examples](docs/tasks/referrals.md), and [billing discovery examples](docs/tasks/billing.md).
+All 47 base families remain available by default. See [the current design](docs/benchmark-design.md), [referral discovery examples](docs/tasks/referrals.md), and [billing discovery examples](docs/tasks/billing.md).
 
 ## Tools and metrics
 
@@ -80,15 +97,15 @@ Metrics record first/all evidence access, model turns and actual API tokens, bac
 ## Local use
 
 ```bash
-uv pip install -e ./environments/fhir_workflows
-fhir-query-rl validate data/synthetic-hospital-v0.3.0 --split dev --discovery-variants
+uv pip install -e ./environments/fhir_query_rl
+fhir-query-rl validate data/synthetic-hospital-v0.4.0 --split dev --discovery-variants
 python -m pytest tests -q
 ```
 
-- [Environment setup, loader arguments and tool contract](environments/fhir_workflows/README.md)
+- [Environment setup, loader arguments and tool contract](environments/fhir_query_rl/README.md)
 - [Metric definitions and checkpoint analysis](docs/metrics-and-evaluation.md)
 - [Resource generation and workflow taxonomy](docs/benchmark-v0.3.0.md)
 - [Browse task examples by workflow area](#task-examples)
 - [Data card and provenance](docs/dataset-card.md)
 
-Clinical expert review and independent full FHIR/server conformance validation remain outstanding. Reference replay verifies the environment's specified tasks; it does not measure trained-agent capability.
+Clinical expert review, terminology/US Core validation and independent-server execution remain outstanding. Reference replay verifies the environment's specified tasks; it does not measure trained-agent capability.
