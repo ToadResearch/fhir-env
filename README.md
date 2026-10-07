@@ -66,6 +66,8 @@ fhir-query-rl enhance \
 
 ## Task examples
 
+Click an area below to see the request, an ASCII retrieval diagram, supporting fields, any chart changes, and the expected answer.
+
 | Area | Examples | Operations |
 |---|---|---|
 | [Clinical search](docs/tasks/clinical-search.md) | Latest valid results, serial measurements, order → report → imaging study | R |
