@@ -86,8 +86,8 @@ def serving_command(plan, prepared, model, port, rpc_port):
     argv = container_prefix(plan, prepared["image_path"], model["cache"], gpu=True)
     argv += [
         "-m",
-        "vllm.entrypoints.openai.api_server",
-        "--model",
+        "vllm.entrypoints.cli.main",
+        "serve",
         model["path"],
         "--served-model-name",
         plan["profile"]["model"],

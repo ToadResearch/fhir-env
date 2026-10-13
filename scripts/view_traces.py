@@ -17,6 +17,7 @@ MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_LINE_BYTES = 16 * 1024 * 1024
 MAX_EPISODES = 100_000
 MAX_RUNS = 500
+MAX_LOG_TAIL_BYTES = 24 * 1024
 
 
 def viewer_interpreters(repo: Path, directory: Path) -> list[Path]:
@@ -81,6 +82,100 @@ class Run:
     episodes: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     config: Any = None
+    campaign: Path | None = None
+    status: str = "Recorded traces"
+    model: str = "Unknown"
+    diagnostics: str = ""
+
+
+def read_metadata(path: Path, warnings: list[str]) -> dict:
+    if not path.is_file():
+        return {}
+    try:
+        if path.stat().st_size > MAX_LINE_BYTES:
+            raise ValueError("Metadata exceeds safety limit")
+        value = json.loads(path.read_text(), parse_constant=reject_constant)
+        if not isinstance(value, dict):
+            raise TypeError("Metadata must be a JSON object")
+        return value
+    except (OSError, TypeError, ValueError, UnicodeError, RecursionError) as error:
+        warnings.append(f"{path.name}: {error}")
+        return {}
+
+
+def log_tail(path: Path) -> str:
+    try:
+        with path.open("rb") as stream:
+            stream.seek(0, 2)
+            size = stream.tell()
+            stream.seek(max(0, size - MAX_LOG_TAIL_BYTES))
+            text = stream.read(MAX_LOG_TAIL_BYTES).decode("utf-8", errors="replace")
+        return ("[Showing log tail]\n" if size > MAX_LOG_TAIL_BYTES else "") + text
+    except OSError as error:
+        return str(error)
+
+
+def load_campaign(campaign: Path, trace: Path | None = None) -> Run:
+    run = load_run(trace) if trace is not None else Run(campaign / "evals/traces.jsonl")
+    run.campaign = campaign
+    plan = read_metadata(campaign / "plan.json", run.warnings)
+    receipts = {
+        name: read_metadata(campaign / "receipts" / f"{name}.json", run.warnings)
+        for name in ("jobs", "prepared", "prepare-failed", "gpu", "finished")
+    }
+    profile = plan.get("profile", {})
+    run.model = (
+        str(profile.get("model", plan.get("preset", "Unknown")))
+        if isinstance(profile, dict)
+        else "Unknown"
+    )
+    if run.config is None:
+        run.config = {
+            "note": "Submission plan; no resolved evaluation config yet",
+            "plan": plan,
+        }
+    finished, gpu = receipts["finished"], receipts["gpu"]
+    if finished.get("status") == "completed":
+        run.status = "Completed"
+    elif finished.get("status") == "failed" or receipts["prepare-failed"]:
+        run.status = "Failed"
+    elif gpu.get("status") == "completed":
+        run.status = "Evaluation completed; reporting pending"
+    elif gpu.get("error") or (
+        gpu.get("status") == "failed" and "elapsed_seconds" in gpu
+    ):
+        run.status = "GPU stage failed"
+    elif gpu:
+        run.status = "GPU stage started; final outcome not recorded"
+    elif receipts["prepared"].get("status") == "prepared":
+        run.status = "Prepared; no GPU outcome recorded"
+    else:
+        run.status = "Submitted; no preparation outcome recorded"
+    parts = [f"Campaign: {campaign}\nState: {run.status}\nModel: {run.model}"]
+    if trace is None:
+        parts.append(
+            "No evaluation traces have been written. This is not a trace-format error. "
+            "Preparation, scheduling or server startup may be incomplete or failed; "
+            "inspect the receipts and log tails below."
+        )
+    parts.append(
+        "Recorded receipts (offline; not live Slurm state):\n" + pretty(receipts)
+    )
+    logs = campaign / "logs"
+    for pattern in (
+        "prepare-*.log",
+        "vllm-cli-preflight.log",
+        "gpu-*.log",
+        "inference.log",
+        "evaluation.log",
+        "finish-*.log",
+    ):
+        paths = sorted(logs.glob(pattern))
+        if paths:
+            path = paths[-1]
+            parts.append(f"--- {path.name} ---\n{log_tail(path)}")
+    run.diagnostics = "\n\n".join(parts)
+    return run
 
 
 def load_run(path: Path) -> Run:
@@ -151,7 +246,7 @@ def load_run(path: Path) -> Run:
 
 def discover_runs(directory: Path) -> list[Run]:
     """Inspect collected runs and Slurm campaigns, without scanning their runtimes."""
-    paths: list[Path] = []
+    runs: list[Run] = []
     frontier = [directory]
     for _ in range(3):
         children = []
@@ -172,13 +267,23 @@ def discover_runs(directory: Path) -> list[Run]:
                         )
                     except OSError:
                         pass
+            found = False
             for root in roots:
                 candidate = root / "traces.jsonl"
                 if candidate.is_file():
-                    paths.append(candidate)
-                    if len(paths) >= MAX_RUNS:
-                        return [load_run(path) for path in paths]
+                    found = True
+                    runs.append(
+                        load_campaign(folder, candidate)
+                        if campaign
+                        else load_run(candidate)
+                    )
+                    if len(runs) >= MAX_RUNS:
+                        return runs
             if campaign:
+                if not found:
+                    runs.append(load_campaign(folder))
+                    if len(runs) >= MAX_RUNS:
+                        return runs
                 # Native results live under evals/PRESET. Do not walk the
                 # campaign's client-venv, active-model or preparation artifacts.
                 continue
@@ -189,7 +294,7 @@ def discover_runs(directory: Path) -> list[Run]:
             except OSError:
                 continue
         frontier = children
-    return [load_run(path) for path in paths]
+    return runs
 
 
 def trace_summary(episode: dict[str, Any]) -> str:
@@ -315,7 +420,7 @@ def episode_sections(episode: dict[str, Any]) -> dict[str, str]:
     return sections
 
 
-def make_app(runs: list[Run]):
+def make_app(runs: list[Run], reload_runs=None):
     from textual.app import App, ComposeResult
     from textual.containers import VerticalScroll
     from textual.widgets import (
@@ -334,6 +439,7 @@ def make_app(runs: list[Run]):
             ("q", "quit", "Quit"),
             ("r", "focus_runs", "Runs"),
             ("t", "focus_tasks", "Tasks"),
+            ("f", "refresh_runs", "Refresh"),
         ]
         selected_run = 0
 
@@ -353,6 +459,7 @@ def make_app(runs: list[Run]):
                         "Metrics and errors",
                         "Task data",
                         "Run config",
+                        "Campaign status",
                     ]
                 ):
                     with TabPane(title, id=f"panel-{i}"), VerticalScroll():
@@ -361,22 +468,44 @@ def make_app(runs: list[Run]):
 
         def on_mount(self) -> None:
             table = self.query_one("#runs", DataTable)
-            table.add_columns("Run path", "Episodes", "Load warnings")
+            table.add_columns("Model", "Run", "State", "Episodes", "Warnings")
             self.query_one("#tasks", DataTable).add_columns(
                 "Task / episode", "Recorded scores"
             )
+            self.populate_runs()
+
+        def populate_runs(self, previous: Path | None = None) -> None:
+            table = self.query_one("#runs", DataTable)
+            table.clear()
             for i, run in enumerate(runs):
                 table.add_row(
-                    str(run.path.parent),
+                    run.model
+                    if run.model != "Unknown"
+                    else str(
+                        run.config.get("model", "Unknown")
+                        if isinstance(run.config, dict)
+                        else "Unknown"
+                    ),
+                    run.campaign.name if run.campaign else str(run.path.parent),
+                    run.status,
                     str(len(run.episodes)),
                     str(len(run.warnings)),
                     key=str(i),
                 )
             if runs:
-                self.select_run(0)
+                index = next(
+                    (
+                        i
+                        for i, run in enumerate(runs)
+                        if (run.campaign or run.path) == previous
+                    ),
+                    0,
+                )
+                table.move_cursor(row=index)
+                self.select_run(index)
             else:
                 self.query_one("#status", Static).update(
-                    "No native traces.jsonl found in the selected output directory."
+                    "No campaigns or native traces found in the selected output directory."
                 )
 
         def select_run(self, index: int) -> None:
@@ -392,7 +521,7 @@ def make_app(runs: list[Run]):
                 )
             self.query_one("#status", Static).update(
                 "\n".join(run.warnings)
-                or f"{len(run.episodes)} episodes loaded from {run.path}"
+                or f"{run.status} | {len(run.episodes)} episodes | {run.campaign or run.path}"
             )
             for i in range(7):
                 self.query_one(f"#content-{i}", Static).update("No episode recorded.")
@@ -403,6 +532,14 @@ def make_app(runs: list[Run]):
             )
             if run.episodes:
                 self.select_episode(0)
+            elif run.campaign:
+                self.query_one("#content-0", Static).update(
+                    "No rollouts recorded yet. Open Campaign status for receipts and preparation/GPU log tails."
+                )
+            self.query_one("#content-8", Static).update(
+                run.diagnostics
+                or "No Slurm campaign metadata accompanies these traces."
+            )
 
         def select_episode(self, index: int) -> None:
             sections = episode_sections(runs[self.selected_run].episodes[index])
@@ -415,9 +552,13 @@ def make_app(runs: list[Run]):
             if event.row_key.value is None:
                 return
             if event.data_table.id == "runs":
-                self.select_run(int(event.row_key.value))
+                index = int(event.row_key.value)
+                if 0 <= index < len(runs):
+                    self.select_run(index)
             elif event.data_table.id == "tasks":
-                self.select_episode(int(event.row_key.value))
+                index = int(event.row_key.value)
+                if runs and 0 <= index < len(runs[self.selected_run].episodes):
+                    self.select_episode(index)
 
         def action_focus_runs(self) -> None:
             self.query_one("#runs").focus()
@@ -425,17 +566,40 @@ def make_app(runs: list[Run]):
         def action_focus_tasks(self) -> None:
             self.query_one("#tasks").focus()
 
+        def action_refresh_runs(self) -> None:
+            if reload_runs is not None:
+                previous = (
+                    (runs[self.selected_run].campaign or runs[self.selected_run].path)
+                    if runs and self.selected_run < len(runs)
+                    else None
+                )
+                runs[:] = reload_runs()
+                self.populate_runs(previous)
+
     return TraceViewer()
 
 
-def main() -> None:
+def parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--outputs-dir", type=Path, default=Path("outputs/evals"))
-    args = parser.parse_args()
+    parser.add_argument(
+        "--outputs-dir",
+        type=Path,
+        default=Path(__file__).resolve().parents[1] / "outputs",
+    )
+    return parser
+
+
+def main() -> None:
+    cli = parser()
+    args = cli.parse_args()
     if not args.outputs_dir.is_dir():
-        parser.error(f"Outputs directory does not exist: {args.outputs_dir}")
+        cli.error(
+            f"Outputs directory does not exist: {args.outputs_dir}; submit an evaluation first"
+        )
     ensure_viewer_runtime(args.outputs_dir)
-    make_app(discover_runs(args.outputs_dir)).run()
+    make_app(
+        discover_runs(args.outputs_dir), lambda: discover_runs(args.outputs_dir)
+    ).run()
 
 
 if __name__ == "__main__":

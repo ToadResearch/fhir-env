@@ -59,6 +59,102 @@ def write_run(path, episodes):
     return trace
 
 
+def test_default_outputs_are_repository_relative(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    assert (
+        viewer.parser().parse_args([]).outputs_dir
+        == Path(viewer.__file__).resolve().parents[1] / "outputs"
+    )
+
+
+def test_failed_campaign_without_rollouts_is_visible(tmp_path):
+    campaign = tmp_path / "hipergator" / "gptoss-failed"
+    (campaign / "evals").mkdir(parents=True)
+    (campaign / "logs").mkdir()
+    (campaign / "receipts").mkdir()
+    (campaign / "plan.json").write_text(
+        json.dumps({"profile": {"model": "openai/gpt-oss-20b"}})
+    )
+    (campaign / "receipts/finished.json").write_text(
+        json.dumps(
+            {
+                "status": "failed",
+                "gpu_status": "missing; inspect CPU/Slurm logs",
+                "episodes": 0,
+            }
+        )
+    )
+    (campaign / "logs/prepare-45815636.log").write_text(
+        "container CLI preflight failed\n"
+    )
+    runs = viewer.discover_runs(tmp_path)
+    assert len(runs) == 1
+    assert runs[0].campaign == campaign
+    assert runs[0].status == "Failed"
+    assert runs[0].model == "openai/gpt-oss-20b"
+    assert not runs[0].episodes
+    assert "container CLI preflight failed" in runs[0].diagnostics
+    assert "not a trace-format error" in runs[0].diagnostics
+
+
+def test_unfinished_campaign_does_not_claim_live_scheduler_state(tmp_path):
+    (tmp_path / "plan.json").write_text("{}")
+    (tmp_path / "receipts").mkdir()
+    (tmp_path / "receipts/prepared.json").write_text('{"status":"prepared"}')
+    run = viewer.discover_runs(tmp_path)[0]
+    assert run.status == "Prepared; no GPU outcome recorded"
+    assert "not live Slurm state" in run.diagnostics
+
+
+def test_native_output_contract_is_discoverable(tmp_path):
+    from types import SimpleNamespace
+
+    from verifiers.v1.cli.output import output_path
+
+    campaign = tmp_path / "hipergator/campaign"
+    campaign.mkdir(parents=True)
+    (campaign / "plan.json").write_text('{"preset":"gpt-oss-20b"}')
+    native_dir = output_path(
+        SimpleNamespace(
+            output_dir=campaign / "evals", run=SimpleNamespace(dir="gpt-oss-20b")
+        )
+    )
+    trace = write_run(native_dir, [episode()])
+    runs = viewer.discover_runs(tmp_path)
+    assert [r.path for r in runs] == [trace]
+    assert len(runs[0].episodes) == 1
+
+
+@pytest.mark.asyncio
+async def test_refresh_reveals_first_rollout_for_empty_campaign(tmp_path):
+    pytest.importorskip("textual")
+    from textual.widgets import DataTable, Static
+
+    campaign = tmp_path / "campaign"
+    campaign.mkdir()
+    (campaign / "plan.json").write_text('{"preset":"glimmer"}')
+    earlier = tmp_path / "a-first-campaign"
+    earlier.mkdir()
+    (earlier / "plan.json").write_text('{"preset":"gpt-oss-20b"}')
+    app = viewer.make_app(
+        viewer.discover_runs(tmp_path), lambda: viewer.discover_runs(tmp_path)
+    )
+    async with app.run_test(size=(160, 50)) as pilot:
+        await pilot.pause()
+        assert app.query_one("#runs", DataTable).row_count == 2
+        await pilot.press("r", "down")
+        await pilot.pause()
+        assert app.selected_run == 1
+        assert app.query_one("#tasks", DataTable).row_count == 0
+        assert "No rollouts" in str(app.query_one("#content-0", Static).content)
+        write_run(campaign / "evals/glimmer", [episode("first-result")])
+        await pilot.press("f")
+        await pilot.pause()
+        assert app.selected_run == 1
+        assert app.query_one("#tasks", DataTable).row_count == 1
+        assert "Find patient" in str(app.query_one("#content-0", Static).content)
+
+
 def test_viewer_interpreters_find_project_and_selected_external_campaign(tmp_path):
     repo = tmp_path / "repo"
     standard = repo / "outputs" / "hipergator" / "standard-run"

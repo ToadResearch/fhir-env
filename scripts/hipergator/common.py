@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 
@@ -63,7 +64,19 @@ def verify_code(plan):
 
 
 def call(argv, **kwargs):
-    return subprocess.run([str(x) for x in argv], check=True, **kwargs)
+    try:
+        return subprocess.run([str(x) for x in argv], check=True, **kwargs)
+    except subprocess.CalledProcessError as error:
+        # Captured preflight diagnostics must reach the Slurm log, too.
+        for output in (error.stdout, error.stderr):
+            if output:
+                print(
+                    output.decode(errors="replace")
+                    if isinstance(output, bytes)
+                    else output,
+                    file=sys.stderr,
+                )
+        raise
 
 
 def load_secrets(repo):

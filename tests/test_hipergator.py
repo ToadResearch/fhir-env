@@ -76,6 +76,71 @@ def test_cpu_gpu_resource_separation(modules, tmp_path):
     assert "--partition=hpg-b200" in modules["launch"].command(cfg, "gpu")
 
 
+def test_cli_preflight_selects_cpu_without_changing_gpu_inference(
+    modules, tmp_path, monkeypatch
+):
+    cfg = plan(modules, tmp_path)
+    calls = []
+
+    def invoke(argv, **kwargs):
+        calls.append(argv)
+        return subprocess.CompletedProcess(
+            argv,
+            0,
+            "--tool-call-parser --enable-auto-tool-choice",
+            "preflight diagnostic\n",
+        )
+
+    monkeypatch.setattr(modules["prepare"], "call", invoke)
+    modules["prepare"].validate_serving_cli(cfg, "/container.sif", "/cache")
+    assert "VLLM_TARGET_DEVICE=cpu" in calls[0]
+    assert "--nv" not in calls[0]
+    assert calls[0][-4:] == ["-m", "vllm.entrypoints.cli.main", "serve", "--help=all"]
+    gpu = modules["gpu"].serving_command(
+        cfg,
+        {"image_path": "/container.sif"},
+        {"cache": "/cache", "path": "/model", "assets": {}},
+        8000,
+        9000,
+    )
+    assert "--nv" in gpu
+    assert "VLLM_TARGET_DEVICE=cpu" not in gpu
+    assert "vllm.entrypoints.cli.main" in gpu and "serve" in gpu
+    assert (
+        "preflight diagnostic"
+        in (Path(cfg["run_dir"]) / "logs/vllm-cli-preflight.log").read_text()
+    )
+
+
+def test_failed_preflight_keeps_stderr_in_artifact(modules, tmp_path, monkeypatch):
+    cfg = plan(modules, tmp_path)
+
+    def fail(argv, **kwargs):
+        raise subprocess.CalledProcessError(
+            1, argv, output="partial help", stderr="real underlying error"
+        )
+
+    monkeypatch.setattr(modules["prepare"], "call", fail)
+    with pytest.raises(subprocess.CalledProcessError):
+        modules["prepare"].validate_serving_cli(cfg, "/container.sif", "/cache")
+    text = (Path(cfg["run_dir"]) / "logs/vllm-cli-preflight.log").read_text()
+    assert "partial help" in text and "real underlying error" in text
+
+
+def test_captured_command_failure_reaches_slurm_log(modules, capsys):
+    with pytest.raises(subprocess.CalledProcessError):
+        modules["common"].call(
+            [
+                sys.executable,
+                "-c",
+                "import sys; print('diagnostic from subprocess', file=sys.stderr); sys.exit(1)",
+            ],
+            capture_output=True,
+            text=True,
+        )
+    assert "diagnostic from subprocess" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize(
     "args",
     [

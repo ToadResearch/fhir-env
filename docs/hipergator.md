@@ -10,6 +10,7 @@ submit.sh                 Slurm account AND QoS: cai6734
     |
 CPU prepare               uv sync; verify/build charts; prepare vLLM SIF
     |                     cache models/tokenizers/templates; pin and hash inputs
+    |                     CLI help check explicitly selects the CPU platform
     | afterok
 B200 evaluate             offline HF; current native tools; traces + metrics
     |                     one TP1 replica/GPU, no training or downloads
@@ -235,12 +236,17 @@ command also has a live Rich dashboard for interactive runs; batch jobs use logs
 and [native v1 evaluation source](https://github.com/PrimeIntellect-ai/verifiers/tree/v0.3.1/verifiers/v1/cli/eval)
 define these surfaces. Evaluation uploads are explicitly disabled.
 
-The viewer discovers native results directly from `outputs/hipergator/` (or
-`outputs/`), as well as collected results from `outputs/evals/`. It scans campaign
-evaluation directories without traversing their environments or model caches.
-After CPU preparation completes, open it directly on HiPerGator:
+The viewer defaults to the repository's **`outputs/`** directory, independent of
+the shell's current working directory. It discovers cluster campaigns in
+`outputs/hipergator/` and collected results in `outputs/evals/`, without traversing
+environments or model caches. After CPU preparation installs its dependencies,
+open it from the repository root:
 
 ```bash
+./scripts/vtrace
+# Equivalent:
+./scripts/view_traces.py
+# Optional: restrict the displayed output tree.
 ./scripts/view_traces.py --outputs-dir outputs/hipergator
 ```
 
@@ -249,11 +255,32 @@ automatically finds a working root `.venv` or a prepared campaign's `client-venv
 and relaunches itself there. No activation or manual environment path is needed;
 it does not install packages or download anything on the login node. If no
 environment is ready, it tells you to wait for CPU preparation. The run list
-lets you select among all discovered model/campaign results.
+lets you select among all discovered models and campaigns, including submitted
+or failed campaigns that have no rollouts yet. States come from saved receipts,
+not live Slurm queries. The **Campaign status** tab shows receipt details and
+bounded tails of preparation, preflight, GPU, inference, evaluation and reporting
+logs. Invalid trace contents appear as explicit load warnings.
 
-This is a lightweight offline terminal UI, not GPU inference. Restart it to
-reload traces written since it opened. Use `r` to focus the run list, `t` to
-focus tasks, arrow keys to navigate and `q` to quit.
+This is a lightweight offline terminal UI, not GPU inference. Use **`f` to
+refresh** campaigns and newly written traces, `r` to focus runs, `t` to focus
+tasks, arrow keys to navigate and `q` to quit.
+
+An existing campaign directory does not mean evaluation ran. The launcher creates
+`evals/` at submission time; native Verifiers later writes
+`evals/PRESET/traces.jsonl` when evaluation starts. An empty `evals/` alongside a
+failed finalizer and no GPU receipt indicates a failure before evaluation, not
+a trace serialization mismatch. Inspect **Campaign status**, or from the
+campaign directory run `tail -n 100 logs/prepare-*.log` and inspect
+`receipts/slurm-accounting.log`. Use `squeue -u "$USER"` for live queue state.
+
+The CPU CLI check uses native `vllm serve --help=all` with
+`VLLM_TARGET_DEVICE=cpu`, an explicit platform supported by the
+[pinned vLLM release](https://github.com/vllm-project/vllm/blob/v0.31.0/vllm/platforms/__init__.py).
+This setting is local to that check; B200 inference uses CUDA. Captured command
+failures now print their stdout/stderr into the Slurm log. The CLI preflight also
+saves both streams in `logs/vllm-cli-preflight.log`; Python preparation failures
+write `receipts/prepare-failed.json`. No upstream code is patched or failures
+silently ignored. Actual cluster preflight success still needs verification.
 
 On your Mac:
 
@@ -264,7 +291,7 @@ uv run python scripts/collect_hipergator_results.py \
   --campaign gptoss-dev-01 --view
 
 # Open collected results again:
-uv run python scripts/view_traces.py --outputs-dir outputs/evals
+./scripts/vtrace
 ```
 
 Collection preserves the native run/config hierarchy and copies only traces,

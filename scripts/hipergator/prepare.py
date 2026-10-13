@@ -3,6 +3,7 @@
 import json
 import os
 import platform
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -20,16 +21,40 @@ from common import (
 HOSPITAL_REV = "911f34c4ac65a508543c4b3b90c373a0cd16534d"
 
 
-def container_prefix(plan, image, cache, *, gpu=False):
+def container_prefix(plan, image, cache, *, gpu=False, extra_env=None):
     # Bind only persistent inputs/outputs used by this campaign. --cleanenv
     # receives explicit APPTAINERENV_/SINGULARITYENV_ offline settings on GPU.
     roots = sorted({plan["repo"], plan["run_dir"], plan["data_dir"], str(cache)})
     argv = [plan["container_engine"], "exec", "--cleanenv"]
     if gpu:
         argv += ["--nv"]
+    for name, value in (extra_env or {}).items():
+        argv += ["--env", f"{name}={value}"]
     for root in roots:
         argv += ["--bind", root + ":" + root]
     return argv + [str(image), "/usr/bin/python3"]
+
+
+def validate_serving_cli(plan, image, cache):
+    """Inspect the native CLI on CPU without accelerator platform autodetection."""
+    prefix = container_prefix(
+        plan, image, cache, extra_env={"VLLM_TARGET_DEVICE": "cpu"}
+    )
+    log = Path(plan["run_dir"]) / "logs/vllm-cli-preflight.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        result = call(
+            prefix + ["-m", "vllm.entrypoints.cli.main", "serve", "--help=all"],
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as error:
+        log.write_text((error.stdout or "") + "\n" + (error.stderr or ""))
+        raise
+    log.write_text(result.stdout + "\n" + result.stderr)
+    for flag in plan["profile"]["serve_args"]:
+        if flag.startswith("--") and flag not in result.stdout:
+            raise RuntimeError("Serving flag absent: " + flag + "; see " + str(log))
 
 
 def audit_data(plan):
@@ -250,15 +275,8 @@ if sys.argv[3]=='lfm2-5-24b-a2b':
             plan["preset"],
         ]
     )
-    # Assert every serving flag exists in the current container before allocating GPUs.
-    help_text = call(
-        prefix + ["-m", "vllm.entrypoints.openai.api_server", "--help"],
-        capture_output=True,
-        text=True,
-    ).stdout
-    for flag in plan["profile"]["serve_args"]:
-        if flag.startswith("--") and flag not in help_text:
-            raise RuntimeError("Serving flag absent: " + flag)
+    # Explicit CPU platform is confined to this CLI check, never inference.
+    validate_serving_cli(plan, image, cache)
     import tomlkit
 
     config = eval_config(plan, 8000)
@@ -300,4 +318,11 @@ if sys.argv[3]=='lfm2-5-24b-a2b':
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException as error:
+        write_json(
+            Path(sys.argv[1]) / "receipts/prepare-failed.json",
+            {"status": "failed", "error": type(error).__name__ + ": " + str(error)},
+        )
+        raise

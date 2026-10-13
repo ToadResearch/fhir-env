@@ -121,9 +121,11 @@ training support and a matched B200 evaluation protocol.
 The [four-model launch command](docs/hipergator.md#run-all-four-models-on-the-same-tasks)
 uses the same dev cohort and budgets for every preset. Cluster campaigns live in
 `outputs/hipergator/`; collected local traces live in `outputs/evals/`.
-Training is not launched. The offline TUI shows questions, replies, tool calls,
-evidence and scores. Browse collected native results with
-`uv run python scripts/view_traces.py --outputs-dir outputs/evals`.
+Training is not launched. Run `./scripts/vtrace` to browse `outputs/` in the
+offline TUI. It shows models/runs, questions, replies, tool calls, evidence and
+scores, plus status and log tails for campaigns without rollouts. Press `f` to
+refresh. The viewer automatically reuses an installed project or campaign
+environment; the output tree can be overridden with `--outputs-dir`.
 
 - [Environment setup, loader arguments and tool contract](environments/fhir_query_rl/README.md)
 - [Metric definitions and checkpoint analysis](docs/metrics-and-evaluation.md)
