@@ -118,7 +118,11 @@ cleanup and result collection. [Liquid model research](docs/liquid-lfm2-5.md)
 links official GRPO notebooks and explains current training integration gaps.
 [GPT-OSS versus Liquid](docs/gpt-oss-vs-liquid.md) compares published throughput,
 training support and a matched B200 evaluation protocol.
-Training is not launched. Browse native results with
+The [four-model launch command](docs/hipergator.md#run-all-four-models-on-the-same-tasks)
+uses the same dev cohort and budgets for every preset. Cluster campaigns live in
+`outputs/hipergator/`; collected local traces live in `outputs/evals/`.
+Training is not launched. The offline TUI shows questions, replies, tool calls,
+evidence and scores. Browse collected native results with
 `uv run python scripts/view_traces.py --outputs-dir outputs/evals`.
 
 - [Environment setup, loader arguments and tool contract](environments/fhir_query_rl/README.md)

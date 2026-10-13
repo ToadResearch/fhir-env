@@ -141,6 +141,25 @@ def test_loading_limits_are_explicit(tmp_path, monkeypatch):
     assert "byte safety limit" in run.warnings[0]
 
 
+def test_discovers_all_slurm_models_without_scanning_campaign_runtime(tmp_path):
+    output = tmp_path / "outputs" / "hipergator"
+    expected = set()
+    for preset in ("gpt-oss-20b", "glimmer", "k2-horizon-7b", "lfm2-5-24b-a2b"):
+        campaign = output / f"four-model-dev-{preset}"
+        campaign.mkdir(parents=True)
+        (campaign / "plan.json").write_text(json.dumps({"preset": preset}))
+        expected.add(write_run(campaign / "evals" / preset, [episode(preset)]))
+        write_run(campaign / "client-venv", [episode("not-an-evaluation")])
+        write_run(campaign / "active-model", [episode("not-an-evaluation")])
+
+    runs = viewer.discover_runs(output)
+    assert {run.path for run in runs} == expected
+    assert all(len(run.episodes) == 1 and not run.warnings for run in runs)
+    assert {run.path for run in viewer.discover_runs(output.parent)} == expected
+    one = next(iter(expected))
+    assert [run.path for run in viewer.discover_runs(one.parents[2])] == [one]
+
+
 def test_malformed_nested_evidence_is_reported(tmp_path):
     bad = episode()
     bad["traces"][0]["nodes"][0]["message"] = None

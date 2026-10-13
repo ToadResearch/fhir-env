@@ -98,17 +98,38 @@ def load_run(path: Path) -> Run:
 
 
 def discover_runs(directory: Path) -> list[Run]:
-    """Inspect the directory and two child levels; do not follow directory symlinks."""
+    """Inspect collected runs and Slurm campaigns, without scanning their runtimes."""
     paths: list[Path] = []
     frontier = [directory]
     for _ in range(3):
         children = []
         for folder in sorted(frontier):
-            candidate = folder / "traces.jsonl"
-            if candidate.is_file():
-                paths.append(candidate)
-                if len(paths) >= MAX_RUNS:
-                    return [load_run(path) for path in paths]
+            roots = [folder]
+            campaign = (folder / "plan.json").is_file()
+            if campaign:
+                evals = folder / "evals"
+                if evals.is_dir() and not evals.is_symlink():
+                    roots.append(evals)
+                    try:
+                        roots.extend(
+                            sorted(
+                                p
+                                for p in evals.iterdir()
+                                if p.is_dir() and not p.is_symlink()
+                            )
+                        )
+                    except OSError:
+                        pass
+            for root in roots:
+                candidate = root / "traces.jsonl"
+                if candidate.is_file():
+                    paths.append(candidate)
+                    if len(paths) >= MAX_RUNS:
+                        return [load_run(path) for path in paths]
+            if campaign:
+                # Native results live under evals/PRESET. Do not walk the
+                # campaign's client-venv, active-model or preparation artifacts.
+                continue
             try:
                 children.extend(
                     p for p in folder.iterdir() if p.is_dir() and not p.is_symlink()
