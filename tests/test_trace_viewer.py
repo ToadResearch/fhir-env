@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -13,6 +14,27 @@ spec = importlib.util.spec_from_file_location(
 viewer = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = viewer
 spec.loader.exec_module(viewer)
+
+
+def test_bootstrap_import_does_not_require_datetime_utc():
+    # Model the system interpreter before the prepared runtime is selected.
+    script = Path(viewer.__file__).resolve()
+    code = (
+        "import datetime, runpy, sys; "
+        "hasattr(datetime, 'UTC') and delattr(datetime, 'UTC'); "
+        "module = runpy.run_path(sys.argv[1], run_name='bootstrap_test'); "
+        "assert module['UTC'] is datetime.timezone.utc; "
+        "assert 'textual' not in sys.modules; "
+        "assert module['parser']().parse_args([]).outputs_dir.name == 'outputs'"
+    )
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", code, str(script)],
+        capture_output=True,
+        text=True,
+        timeout=15,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 def episode(key="task-one"):

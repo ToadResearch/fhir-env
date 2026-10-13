@@ -13,7 +13,7 @@ import subprocess
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -22,6 +22,10 @@ MAX_LINE_BYTES = 16 * 1024 * 1024
 MAX_EPISODES = 100_000
 MAX_RUNS = 500
 MAX_LOG_TAIL_BYTES = 24 * 1024
+
+# This stdlib-only bootstrap must import on HiPerGator's system Python 3.9
+# before ensure_viewer_runtime can re-exec in the prepared Python 3.13 runtime.
+UTC = timezone.utc  # noqa: UP017
 
 
 def viewer_interpreters(repo: Path, directory: Path) -> list[Path]:
