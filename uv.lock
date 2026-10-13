@@ -440,10 +440,12 @@ version = "0.4.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fhir-query-rl" },
+    { name = "filelock" },
     { name = "huggingface-hub" },
     { name = "prime" },
     { name = "python-dotenv" },
     { name = "textual" },
+    { name = "tomlkit" },
     { name = "verifiers" },
     { name = "wandb" },
 ]
@@ -462,10 +464,12 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fhir-query-rl", editable = "environments/fhir_query_rl" },
+    { name = "filelock", specifier = ">=4,<5" },
     { name = "huggingface-hub", specifier = ">=1" },
     { name = "prime", specifier = "==0.9.3" },
     { name = "python-dotenv", specifier = ">=1,<2" },
     { name = "textual", specifier = "==8.2.8" },
+    { name = "tomlkit", specifier = ">=0.15,<0.16" },
     { name = "verifiers", specifier = "==0.3.1" },
     { name = "wandb", specifier = "==0.30.0" },
 ]

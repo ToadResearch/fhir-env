@@ -11,6 +11,8 @@ dependencies = [
     "python-dotenv>=1,<2",
     "wandb==0.30.0",
     "textual==8.2.8",
+    "tomlkit>=0.15,<0.16",
+    "filelock>=4,<5",
 ]
 
 [dependency-groups]

@@ -34,6 +34,9 @@ Each campaign gets its own environment at
 `UV_PROJECT_ENVIRONMENT` to that path and runs `uv sync --locked --python 3.13
 --no-dev`. GPU evaluation and CPU reporting reuse its interpreter. A root
 `.venv` is optional for local development and is not used by the Slurm jobs.
+The production dependencies explicitly include `tomlkit` for generated evaluation
+TOML and `filelock` for shared-cache locking. These must remain in the root
+project dependencies, not only the development dependency group.
 
 If `.env` does not exist yet, create it once from the repository root:
 
@@ -318,3 +321,11 @@ not claims of performance on the new runtime.
 Native API integration and offline viewer tests run locally. The actual Linux
 CPU preparation and B200 smoke evaluation remain the next gates. No HiPerGator
 jobs or model-weight downloads were started while implementing this setup.
+
+A fresh local `uv sync --locked --no-dev` environment also passes host-runtime
+imports, generated TOML round trips and native evaluation CLI dry-runs for all
+four presets on the small pilot fixture. This checks production dependency and
+configuration completeness; it does not exercise container inference or validate
+B200 execution. In the first cluster retry, the explicit CPU CLI preflight passed
+for all four presets; preparation then exposed the missing production `tomlkit`
+dependency, now declared in `pyproject.toml` and `uv.lock`.

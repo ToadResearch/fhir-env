@@ -11,6 +11,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+import tomlkit
 from common import digest, eval_config, load_secrets, read_plan, verify_code, write_json
 from prepare import container_prefix
 
@@ -262,8 +263,6 @@ print(json.dumps([{'logical_index':i,'name':torch.cuda.get_device_properties(i).
         )
         processes.append(server)
         wait_server(server, f"http://127.0.0.1:{port}/v1")
-        import tomlkit
-
         (run / "launch-eval.toml").write_text(tomlkit.dumps(eval_config(plan, port)))
         eval_argv = [
             str(run / "client-venv/bin/eval"),

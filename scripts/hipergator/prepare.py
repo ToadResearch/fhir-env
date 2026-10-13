@@ -8,6 +8,7 @@ import sys
 import time
 from pathlib import Path
 
+import tomlkit
 from common import (
     call,
     digest,
@@ -277,8 +278,6 @@ if sys.argv[3]=='lfm2-5-24b-a2b':
     )
     # Explicit CPU platform is confined to this CLI check, never inference.
     validate_serving_cli(plan, image, cache)
-    import tomlkit
-
     config = eval_config(plan, 8000)
     (run / "eval.toml").write_text(tomlkit.dumps(config))
     # A current dry-run creates its run directory. Keep that gate separate
