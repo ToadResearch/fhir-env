@@ -232,8 +232,10 @@ outputs/hipergator/CAMPAIGN/
 
 The current Prime CLI **no longer includes the old local evaluation TUI**. This
 project provides a new offline viewer for current native traces, without keeping
-an old Prime version. It shows questions, final replies, the recorded message
-graph, tool calls, FHIR evidence, metrics and errors. The current Verifiers eval
+an old Prime version. It separates model/run browsing from readable rollouts,
+tool calls, FHIR evidence, metrics and errors. Its presentation was informed by
+the [historical Verifiers TUI](https://github.com/PrimeIntellect-ai/verifiers/blob/2fbd2b7fab0236cb039c4aa5afb25ad9c5f17134/verifiers/scripts/tui.py);
+it continues to read current native v1 episodes. The current Verifiers eval
 command also has a live Rich dashboard for interactive runs; batch jobs use logs.
 [Current CLI source](https://github.com/PrimeIntellect-ai/prime/tree/v0.9.3/packages/prime/src/prime_cli/commands)
 and [native v1 evaluation source](https://github.com/PrimeIntellect-ai/verifiers/tree/v0.3.1/verifiers/v1/cli/eval)
@@ -257,10 +259,45 @@ The script uses Textual from the current interpreter if installed. Otherwise it
 automatically finds a working root `.venv` or a prepared campaign's `client-venv`
 and relaunches itself there. No activation or manual environment path is needed;
 it does not install packages or download anything on the login node. If no
-environment is ready, it tells you to wait for CPU preparation. The run list
-lets you select among all discovered models and campaigns, including submitted
-or failed campaigns that have no rollouts yet. States come from saved receipts,
-not live Slurm queries. The **Campaign status** tab shows receipt details and
+environment is ready, it tells you to wait for CPU preparation.
+
+```text
+Model                  Run (newest first, UTC)       Task          Detail
+GPT-OSS 20B       →     timestamp · correct/total →   result / ID → Task | Rollout | Scores
+Muse Glimmer            completed / failed                         Campaign | Raw
+K2 Horizon 7B           errors counted separately
+Liquid LFM2.5
+```
+
+Select a model in the left pane, then a run and a task. Narrow terminals use a
+model dropdown instead. **Correct** means `workflow_success=1`, falling back to
+`strict_success` when the workflow metric is absent. Execution errors take
+precedence, and missing metrics remain **unscored**. Reward alone and `episode.ok`
+never determine correctness. The denominator uses the submission's requested
+task count when available; the summary separately shows recorded tasks and the
+success rate among scored tasks. Strict JSON correctness remains visible in
+**Scores**. Output-token averages show how many episodes have complete usage;
+missing usage is not treated as zero.
+
+| Key / control | Action |
+| --- | --- |
+| `m`, `r`, `t` | Focus models, runs or tasks |
+| `/` and result dropdown | Search prompt/ID/family; filter correct, incorrect, errors or unscored |
+| `n` / `p` | Next / previous visible task |
+| `a` | Show / hide recorded reasoning |
+| `e` | Expand / shorten long tool results and raw data |
+| `f` | Refresh from disk, preserving the selected run and task |
+| `Tab`, arrow keys, mouse | Move between controls, rows and detail tabs; scroll details |
+| `q` | Quit |
+
+**Task** shows the request and final answer. **Rollout** separates sampled
+assistant turns, function arguments and tool results, pairing names by call ID.
+Prompt demonstrations and opaque provider state stay in **Raw**; they are not
+displayed as agent turns. Long outputs are shortened for reading, with bounded
+expansion; the complete source remains in `traces.jsonl`.
+
+Submitted or failed campaigns without rollouts remain selectable. States come
+from saved receipts, not live Slurm queries. The **Campaign** tab shows receipt details and
 bounded tails of preparation, preflight, GPU, inference, evaluation and reporting
 logs. Invalid trace contents appear as explicit load warnings.
 

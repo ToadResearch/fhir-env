@@ -122,9 +122,12 @@ The [four-model launch command](docs/hipergator.md#run-all-four-models-on-the-sa
 uses the same dev cohort and budgets for every preset. Cluster campaigns live in
 `outputs/hipergator/`; collected local traces live in `outputs/evals/`.
 Training is not launched. Run `./scripts/vtrace` to browse `outputs/` in the
-offline TUI. It shows models/runs, questions, replies, tool calls, evidence and
-scores, plus status and log tails for campaigns without rollouts. Press `f` to
-refresh. The viewer automatically reuses an installed project or campaign
+offline TUI: **model → newest runs → tasks → rollout**. Each run shows
+**correct/total**, with incorrect answers, execution errors and unscored tasks
+listed separately. Search/filter tasks, read labeled assistant turns and tool
+results, or open raw traces and campaign logs. Press `f` to refresh, `n`/`p` for
+next/previous task, `a` for reasoning and `e` to expand long outputs.
+The viewer automatically reuses an installed project or campaign
 environment; the output tree can be overridden with `--outputs-dir`.
 
 - [Environment setup, loader arguments and tool contract](environments/fhir_query_rl/README.md)

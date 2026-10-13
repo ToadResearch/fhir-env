@@ -141,16 +141,17 @@ async def test_refresh_reveals_first_rollout_for_empty_campaign(tmp_path):
     )
     async with app.run_test(size=(160, 50)) as pilot:
         await pilot.pause()
-        assert app.query_one("#runs", DataTable).row_count == 2
-        await pilot.press("r", "down")
+        assert app.query_one("#models", DataTable).row_count == 2
+        app.selected_model = "glimmer"
+        app.populate_runs()
         await pilot.pause()
-        assert app.selected_run == 1
+        assert app.selected_model == "glimmer"
         assert app.query_one("#tasks", DataTable).row_count == 0
         assert "No rollouts" in str(app.query_one("#content-0", Static).content)
         write_run(campaign / "evals/glimmer", [episode("first-result")])
         await pilot.press("f")
         await pilot.pause()
-        assert app.selected_run == 1
+        assert app.selected_model == "glimmer"
         assert app.query_one("#tasks", DataTable).row_count == 1
         assert "Find patient" in str(app.query_one("#content-0", Static).content)
 
@@ -263,11 +264,12 @@ async def test_navigation(tmp_path):
     from textual.widgets import DataTable, Static
 
     first = viewer.load_run(
-        write_run(tmp_path / "first", [episode("one"), episode("two")])
+        write_run(tmp_path / "run-20261013-220000Z", [episode("one"), episode("two")])
     )
     second = viewer.load_run(
-        write_run(tmp_path / "second", [{"task": {}, "traces": []}])
+        write_run(tmp_path / "run-20261013-210000Z", [{"task": {}, "traces": []}])
     )
+    second.model = "test-model"
     app = viewer.make_app([first, second])
     async with app.run_test(size=(160, 50)) as pilot:
         await pilot.pause()
@@ -278,7 +280,7 @@ async def test_navigation(tmp_path):
         await pilot.pause()
         assert app.selected_run == 1
         assert "No conversation recorded" in str(
-            app.query_one("#content-2", Static).content
+            app.query_one("#content-1", Static).content
         )
         await pilot.press("q")
 
@@ -355,3 +357,185 @@ def test_native_message_node_sampled_provenance():
     assert "recorded reply" in sections["Final answer"]
     assert "prompt context" not in sections["Final answer"]
     assert "prompt context" in sections["Conversation"]
+
+
+def test_correctness_never_uses_execution_ok_or_partial_reward():
+    record = episode()
+    record["traces"][0]["metrics"] = {"reward": 0.2}
+    assert viewer.outcome(record) == "Unscored"
+    record["traces"][0]["metrics"]["workflow_success"] = 0
+    record["traces"][0]["metrics"]["strict_success"] = 1
+    assert viewer.outcome(record) == "Incorrect"
+    record["traces"][0]["metrics"]["workflow_success"] = 1
+    record["traces"][0]["metrics"]["strict_success"] = 0
+    assert viewer.outcome(record) == "Correct"
+    record["errors"] = [{"message": "transport failure"}]
+    assert viewer.outcome(record) == "Error"
+    record["errors"] = []
+    record["traces"][0]["ok"] = False
+    assert viewer.outcome(record) == "Error"
+
+
+def test_campaign_counts_distinguish_missing_errors_and_unscored(tmp_path):
+    correct = episode("correct")
+    incorrect = episode("incorrect")
+    incorrect["traces"][0]["metrics"]["strict_success"] = 0
+    failed = episode("failed")
+    failed["ok"] = False
+    unscored = episode("unscored")
+    unscored["traces"][0]["metrics"] = {}
+    run = viewer.Run(
+        tmp_path / "traces.jsonl",
+        episodes=[correct, incorrect, failed, unscored],
+        requested=8,
+    )
+    assert viewer.score_label(run) == "1 / 8"
+    assert viewer.run_counts(run) == {
+        "Correct": 1,
+        "Incorrect": 1,
+        "Error": 1,
+        "Unscored": 1,
+    }
+    run.episodes = []
+    assert viewer.score_label(run) == "— / 8"
+
+
+def test_unknown_token_usage_is_not_zero():
+    record = episode()
+    record["traces"][0]["calls"][0]["usage"] = None
+    assert viewer.usage(record) == (1, None)
+    record["traces"][0]["calls"][0]["usage"] = {
+        "completion_tokens": 42,
+        "reasoning_tokens": 17,
+    }
+    assert viewer.usage(record) == (1, 42)  # reasoning tokens are already included
+    record["traces"][0]["calls"].append({"usage": None})
+    assert viewer.usage(record) == (2, None)
+
+
+def rendered(renderable):
+    from io import StringIO
+
+    from rich.console import Console
+
+    stream = StringIO()
+    Console(file=stream, width=90, color_system=None).print(renderable)
+    return stream.getvalue()
+
+
+def test_readable_rollout_pairs_calls_separates_reasoning_and_hides_prompt_examples():
+    record = episode()
+    nodes = record["traces"][0]["nodes"]
+    nodes.insert(
+        0,
+        {
+            "message": {"role": "assistant", "content": "DEMONSTRATION"},
+            "sampled": False,
+        },
+    )
+    nodes[2]["message"]["reasoning_content"] = "THINKING"
+    nodes[2]["message"]["provider_state"] = [{"encrypted": "OPAQUE"}]
+    nodes[2]["message"]["tool_calls"][0]["id"] = "call-a"
+    nodes[3]["message"]["tool_call_id"] = "call-a"
+    nodes[3]["message"]["content"] = "[not-rich-markup] plain tool text"
+    nodes.insert(1, {"message": {"role": "tool", "content": "EXAMPLE RESULT"}})
+    text = rendered(viewer.rollout_view(record))
+    assert "Turn 1 · Assistant" in text
+    assert "Call search" in text and "Result · search" in text
+    assert "[not-rich-markup]" in text
+    assert "EXAMPLE RESULT" not in text
+    assert (
+        "DEMONSTRATION" not in text and "THINKING" not in text and "OPAQUE" not in text
+    )
+    assert "THINKING" in rendered(viewer.rollout_view(record, reasoning=True))
+
+
+def test_render_limits_expand_without_modifying_saved_content():
+    original = "\n".join("line-" + str(i) for i in range(500))
+    assert "Display shortened" in viewer.bounded(original)
+    assert "line-350" not in viewer.bounded(original)
+    assert "line-350" in viewer.bounded(original, expanded=True)
+    assert "line-499" in original
+
+
+@pytest.mark.asyncio
+async def test_model_groups_newest_first_filters_and_refresh_preserve_task(tmp_path):
+    from textual.widgets import DataTable, Input, Select
+
+    older = viewer.Run(
+        tmp_path / "run-20261013-210000Z/traces.jsonl",
+        model="model-A",
+        episodes=[episode("old")],
+    )
+    bad = episode("bad")
+    bad["traces"][0]["metrics"]["strict_success"] = 0
+    newer = viewer.Run(
+        tmp_path / "run-20261013-220000Z/traces.jsonl",
+        model="model-A",
+        episodes=[episode("good"), bad],
+    )
+    other = viewer.Run(
+        tmp_path / "run-20261013-200000Z/traces.jsonl",
+        model="model-B",
+        episodes=[episode("other")],
+    )
+    updated = [older, newer, other]
+    app = viewer.make_app([older, other, newer], lambda: list(updated))
+    async with app.run_test(size=(160, 50)) as pilot:
+        await pilot.pause()
+        assert app.selected_model == "model-A"
+        assert app.query_one("#models", DataTable).row_count == 2
+        assert app.query_one("#runs", DataTable).row_count == 2
+        assert app.selected_run == 0
+        assert app.visible_tasks == [0, 1]
+        app.query_one("#filter", Select).value = "Incorrect"
+        await pilot.pause()
+        assert app.visible_tasks == [1]
+        assert app.selected_episode == 1
+        app.query_one("#search", Input).value = "missing"
+        await pilot.pause()
+        assert app.visible_tasks == []
+        app.query_one("#search", Input).value = ""
+        app.query_one("#filter", Select).value = "All"
+        await pilot.pause()
+        assert app.selected_episode == 1
+        updated.insert(
+            0,
+            viewer.Run(
+                tmp_path / "run-20261013-230000Z/traces.jsonl",
+                model="model-A",
+                episodes=[episode("latest")],
+            ),
+        )
+        await pilot.press("f")
+        await pilot.pause()
+        assert app.selected_run == 1  # same run, despite a newer run inserted above it
+        assert app.selected_episode == 1
+        await pilot.press("m", "down")
+        await pilot.pause()
+        assert app.selected_model == "model-B"
+        assert app.query_one("#runs", DataTable).row_count == 1
+
+
+@pytest.mark.asyncio
+async def test_narrow_and_empty_viewers_can_refresh(tmp_path):
+    from textual.widgets import DataTable, Select
+
+    updated = []
+    app = viewer.make_app([], lambda: list(updated))
+    async with app.run_test(size=(100, 30)) as pilot:
+        await pilot.pause()
+        assert app.has_class("compact") and app.has_class("short")
+        assert not app.query_one("#model-pane").display
+        assert app.query_one("#compact-model").display
+        await pilot.press("n", "p", "a", "e", "f")
+        await pilot.pause()
+        updated.append(
+            viewer.Run(
+                tmp_path / "traces.jsonl", model="new-model", episodes=[episode()]
+            )
+        )
+        await pilot.press("f")
+        await pilot.pause()
+        assert app.query_one("#tasks", DataTable).row_count == 1
+        assert app.query_one("#compact-model", Select).value == "new-model"
