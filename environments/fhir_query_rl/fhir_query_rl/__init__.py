@@ -1,8 +1,3 @@
-def load_environment(**kwargs):
-    # Keep CLI compilation usable without importing the rollout framework.
-    from .fhir_query_rl import load_environment as loader
+from .fhir_query_rl import FhirEnv, FhirTaskset, load_environment
 
-    return loader(**kwargs)
-
-
-__all__ = ["load_environment"]
+__all__ = ["FhirEnv", "FhirTaskset", "load_environment"]

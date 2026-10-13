@@ -7,7 +7,6 @@ import subprocess
 import sys
 
 import pytest
-from verifiers.types import Response, ResponseMessage, Usage
 
 from fhir_query_rl.cli import replay_task
 from fhir_query_rl.dataset import load_jsonl
@@ -50,20 +49,14 @@ def episode(family="latest_result"):
 
 
 def test_usage_counts_actual_calls_and_does_not_double_count_reasoning():
-    response = Response(
-        id="test",
-        created=0,
-        model="test",
-        message=ResponseMessage(
-            content="done", finish_reason="stop", is_truncated=False
-        ),
-        usage=Usage(
-            prompt_tokens=100,
-            completion_tokens=40,
-            reasoning_tokens=30,
-            total_tokens=140,
-        ),
-    )
+    response = {
+        "usage": {
+            "prompt_tokens": 100,
+            "completion_tokens": 40,
+            "reasoning_tokens": 30,
+            "total_tokens": 140,
+        }
+    }
     trajectory = [
         {"response": response},
         {"response": {"usage": {"prompt_tokens": 150, "completion_tokens": 5}}},
@@ -218,14 +211,16 @@ def test_discovery_variants_keep_original_writes_and_replay_all_branches():
 def test_loader_preserves_default_crud_and_exposes_optional_discovery_metadata():
     base = load_environment(pilot=True)
     expanded = load_environment(pilot=True, discovery_variants=True)
-    assert set(base.task_index) < set(expanded.task_index)
+    base_tasks = {task.key: task.data.case for task in base.taskset}
+    expanded_tasks = {task.key: task.data.case for task in expanded.taskset}
+    assert set(base_tasks) < set(expanded_tasks)
     assert all(
-        task == expanded.task_index[key] for key, task in base.task_index.items()
+        task == expanded_tasks[key] for key, task in base_tasks.items()
     )
     selected = load_environment(
         pilot=True, discovery_variants=True, family="claim_cleanup_discovery"
     )
-    info = selected.eval_dataset[0]["info"]
+    info = list(selected.taskset)[0].data.info
     assert info["difficulty_bin"] == "very_hard" and info["retrieval_hops"] == 4
     assert info["crud"] == "RD" and info["required_mutation_entries"] == 1
 

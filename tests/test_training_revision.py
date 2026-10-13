@@ -6,9 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
-import verifiers as vf
-from verifiers.types import Response, ResponseMessage
-
+import verifiers.v1 as vf
 from fhir_query_rl.dataset import load_jsonl
 from fhir_query_rl.fhir_query_rl import load_environment
 from fhir_query_rl.protocol import parse_object
@@ -137,107 +135,28 @@ def test_restore_after_corrupt_write_cannot_receive_shaping():
     assert metrics["reward"] == metrics["mutation_integrity"] == 0
 
 
-def test_json_action_schema_rejects_hidden_args_and_unknown_functions():
-    env = load_environment(
-        pilot=True, tool_protocol="json_action", family="latest_result", max_examples=1
-    )
-    row = env.dataset[0]
-    state = vf.State(
-        {"info": row["info"], "prompt": row["prompt"], "answer": "", "task": "default"}
-    )
-    asyncio.run(env.setup_state(state))
-    assert env.tool_defs == [] and "fhir_request" in env.tool_map
-    for action in [
-        {
-            "tool": "fhir_request",
-            "args": {"method": "GET", "path": "metadata", "_store": {}},
-        },
-        {"tool": "exec", "args": {"code": "print(1)"}},
-        {"tool": "fhir_request", "args": {"method": 1, "path": "metadata"}},
-    ]:
-        result = asyncio.run(
-            env.env_response([vf.AssistantMessage(content=json.dumps(action))], state)
-        )
-        assert "Nothing was executed" in result[0].content
-    assert not state["fhir_store"].events and state["action_format_errors"] == 3
-
-
-@pytest.mark.parametrize("protocol", ["native", "json_action"])
-def test_full_rollout_retrieves_then_stops_with_demonstrations(monkeypatch, protocol):
-    env = load_environment(
-        pilot=True,
-        tool_protocol=protocol,
-        family="latest_result",
-        max_examples=1,
-        demonstrations=True,
-    )
-    row = env.dataset[0]
-    task = env.task_index[row["info"]["task_id"]]
-    steps = task["reference_steps"].copy()
-    final_sent = []
-
-    async def response(state, messages, **kwargs):
-        assert bool(state["tool_defs"]) == (protocol == "native")
-        if steps:
-            step = steps.pop(0)
-            if protocol == "json_action":
-                message = ResponseMessage(
-                    content=json.dumps({"tool": "fhir_request", "args": step}),
-                    finish_reason="stop",
-                    is_truncated=False,
-                )
-            else:
-                message = ResponseMessage(
-                    content="",
-                    tool_calls=[
-                        vf.ToolCall(
-                            id="test-call",
-                            name="fhir_request",
-                            arguments=json.dumps(step),
-                        )
-                    ],
-                    finish_reason="tool_calls",
-                    is_truncated=False,
-                )
-        else:
-            final_sent.append(True)
-            message = ResponseMessage(
-                content=answer(task), finish_reason="stop", is_truncated=False
-            )
-        return Response(
-            id="test",
-            created=0,
-            model="test",
-            message=message,
-        )
-
-    monkeypatch.setattr(env, "get_model_response", response)
-    monkeypatch.setenv("FHIR_TEST_API_KEY", "test-placeholder")
-    state = asyncio.run(
-        env.rollout(row, vf.ClientConfig(api_key_var="FHIR_TEST_API_KEY"), "test")
-    )
-    assert state["error"] is None and not steps and final_sent == [True]
-    assert len(state["trajectory"]) == 2
-    assert "Coverage/demo-coverage" not in state["fhir_store"].seen
-    # Five prompt demonstration turns must not inflate first-evidence latency.
-    assert state["fhir_prompt_assistant_turns"] == 5
-    assert state["fhir_store"].events[0]["round"] == 1
-    assert (
-        evaluate_training(task, state["fhir_store"], answer(task))["strict_success"]
-        == 1
-    )
+def test_removed_legacy_protocol_is_rejected():
+    with pytest.raises(TypeError, match="Unknown native v1"):
+        load_environment(pilot=True, tool_protocol="json_action")
 
 
 def test_supplied_context_gets_no_retrieval_bonus():
     env = load_environment(
         pilot=True, tool_profile="none", family="latest_result", max_examples=1
     )
-    row = env.dataset[0]
-    state = vf.State(
-        {"info": row["info"], "prompt": row["prompt"], "answer": "", "task": "default"}
+    from fhir_query_rl.fhir_query_rl import FhirState
+
+    task = next(iter(env.taskset))
+    trace = vf.Trace(
+        task=vf.TraceTask(type="FhirTask", data=task.data),
+        agent=vf.AgentInfo(config=env.config.agent),
+        state=FhirState(),
     )
-    asyncio.run(env.setup_state(state))
+    asyncio.run(task.setup(trace, None))
     metrics = evaluate_training(
-        state["fhir_task"], state["fhir_store"], "{}", retrieval_weight=0.2
+        task.data.case,
+        FhirStore.from_snapshot(trace.state.snapshot),
+        "{}",
+        retrieval_weight=0.2,
     )
     assert metrics["retrieval_progress"] == 1 and metrics["retrieval_shaping"] == 0

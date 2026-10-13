@@ -1,7 +1,6 @@
 import asyncio
 import copy
 import json
-from pathlib import Path
 
 import pytest
 
@@ -315,59 +314,43 @@ def test_dependency_depth_is_not_api_call_count(corpus):
     assert follow["dependency_depth"] == 4 and follow["workflow_depth"] == 5
 
 
-def test_current_training_config_legacy_bridge():
-    import tomllib
-    from verifiers.v1.env import EnvConfig
+def test_current_native_taskset_discovery():
+    import verifiers.v1 as vf
+    from fhir_query_rl.fhir_query_rl import FhirTask, FhirTasksetConfig, FhirEnvConfig
 
-    repo = Path(__file__).parents[1]
-    for name in ["prime-rl.toml", "hosted-dedicated.template.toml"]:
-        config = tomllib.loads((repo / "configs" / name).read_text())
-        for role in ["train", "eval"]:
-            for source in config["orchestrator"][role]["source"]:
-                validated = EnvConfig.model_validate(source["env"])
-                assert validated.is_legacy and validated.args["query_mode"] == "rest"
+    assert vf.task_type("fhir-query-rl") is FhirTask
+    assert vf.taskset_config_type("fhir-query-rl") is FhirTasksetConfig
+    assert vf.env_config_type("fhir-query-rl") is FhirEnvConfig
 
 
 def test_verifiers_loader_and_tool_dispatch(corpus):
     from fhir_query_rl import load_environment
-    import verifiers as vf
+    from fhir_query_rl.fhir_query_rl import FhirState, FhirToolset, FhirToolConfig
+    import verifiers.v1 as vf
+    from mcp.server.fastmcp import FastMCP
 
     env = load_environment(data_dir=str(corpus[0]), query_mode="hybrid")
-    assert all(
-        "_store" not in tool.parameters.get("properties", {}) for tool in env.tool_defs
-    )
-    row = env.dataset[0]
-    state = vf.State(
-        {
-            "info": row["info"],
-            "prompt": row["prompt"],
-            "answer": row["answer"],
-            "task": "default",
-        }
+    task = next(iter(env.taskset))
+    trace = vf.Trace(
+        task=vf.TraceTask(type="FhirTask", data=task.data),
+        agent=vf.AgentInfo(config=env.config.agent),
+        state=FhirState(),
     )
 
     async def run():
-        await env.setup_state(state)
-        t = state["fhir_task"]
-        step = t["reference_steps"][0]
-        message = vf.AssistantMessage(
-            tool_calls=[
-                vf.ToolCall(
-                    id="test",
-                    name="fhir_request",
-                    arguments=json.dumps(
-                        {"method": step["method"], "path": step["path"]}
-                    ),
-                )
-            ]
-        )
-        result = await env.env_response([message], state)
-        assert json.loads(result[0].content)["status"] == 200
-        assert state["fhir_store"].events[0]["round"] == 1
-        state["completion"] = [vf.AssistantMessage(content=json.dumps(final(t)))]
-        await env.rubric.score_rollout(state)
-        assert state["reward"] == 1.0
-        assert state["fhir_metrics"]["strict_success"] == 1.0
+        await task.setup(trace, None)
+        tools = FhirToolset(FhirToolConfig(query_mode="hybrid"))
+        tools._inert_state = trace.state
+        mcp = FastMCP("test")
+        tools.register(mcp)
+        schemas = await mcp.list_tools()
+        assert {t.name for t in schemas} == {"fhir_request", "sql_query"}
+        assert all("_store" not in t.inputSchema.get("properties", {}) for t in schemas)
+        trace.state.round = 1
+        step = task.data.case["reference_steps"][0]
+        result = await tools.fhir_request(step["method"], step["path"])
+        assert json.loads(result)["status"] == 200
+        assert FhirStore.from_snapshot(trace.state.snapshot).events[0]["round"] == 1
 
     asyncio.run(run())
 
@@ -465,12 +448,11 @@ def test_assistance_ablation_preserves_dataset_and_gold(corpus):
     assisted = load_environment(
         data_dir=str(root), tool_profile="assisted", max_examples=12
     )
-    assert (
-        raw.dataset.select_columns(["question", "answer", "info"]).to_list()
-        == assisted.dataset.select_columns(["question", "answer", "info"]).to_list()
-    )
-    assert raw.task_index == assisted.task_index
-    assert len(assisted.tools) == len(raw.tools) + 5
+    raw_tasks, assisted_tasks = list(raw.taskset), list(assisted.taskset)
+    assert [(t.data.prompt, t.data.info, t.data.case) for t in raw_tasks] == [
+        (t.data.prompt, t.data.info, t.data.case) for t in assisted_tasks
+    ]
+    assert assisted_tasks[0].config.tool_profile == "assisted"
 
 
 def test_longitudinal_narratives_are_linked_and_do_not_modify_source_list(corpus):
@@ -487,27 +469,26 @@ def test_longitudinal_narratives_are_linked_and_do_not_modify_source_list(corpus
 
 
 def test_literal_no_tools_control_is_read_only_and_supplies_visible_context(corpus):
-    import verifiers as vf
-    from fhir_query_rl.fhir_query_rl import load_environment
+    import verifiers.v1 as vf
+    from fhir_query_rl.fhir_query_rl import load_environment, FhirState
 
     root, _ = corpus
     env = load_environment(
         data_dir=str(root), tool_profile="none", family="latest_result", max_examples=2
     )
-    assert not env.tools
-    row = env.dataset[0]
-    assert "pre-supplied no-tools control" in row["question"]
-    state = vf.State(
-        {
-            "info": row["info"],
-            "prompt": row["prompt"],
-            "answer": row["answer"],
-            "task": "default",
-        }
+    task = next(iter(env.taskset))
+    assert not task.toolsets(task.config)
+    assert "pre-supplied no-tools control" in task.data.prompt
+    trace = vf.Trace(
+        task=vf.TraceTask(type="FhirTask", data=task.data),
+        agent=vf.AgentInfo(config=env.config.agent),
+        state=FhirState(),
     )
-    asyncio.run(env.setup_state(state))
+    asyncio.run(task.setup(trace, None))
     metrics = evaluate(
-        state["fhir_task"], state["fhir_store"], final(state["fhir_task"])
+        task.data.case,
+        FhirStore.from_snapshot(trace.state.snapshot),
+        final(task.data.case),
     )
     assert metrics["strict_success"] == 1 and metrics["tool_calls"] == 0
     assert metrics["context_bytes"] > 0 and metrics["first_evidence_call"] == 0

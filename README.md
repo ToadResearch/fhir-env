@@ -92,6 +92,9 @@ All 47 base families remain available by default. See [the current design](docs/
 
 ## Tools and metrics
 
+See the [agent tools walkthrough](docs/tools.md) for fictional requests, tool calls,
+example responses and an ASCII diagram of a complete retrieval-and-update task.
+
 Compare raw FHIR with five optional helpers on identical frozen tasks. Experimental read-only SQL uses the same resources, with FHIR handling writes. A supplied-chart no-tools control covers three read-only families.
 
 Strict success requires a correct answer, retrieval of required evidence fields, and exactly the requested mutations. Ordinary correctness checks retain patient scope, ETags, atomicity, preserved fields and mutation history. Default reward has no retrieval shaping or efficiency bonus.
@@ -101,10 +104,22 @@ Metrics record first/all evidence access, model turns and actual API tokens, bac
 ## Local use
 
 ```bash
-uv pip install -e ./environments/fhir_query_rl
-fhir-query-rl validate data/synthetic-hospital-v0.4.0 --split dev --discovery-variants
-python -m pytest tests -q
+uv sync --locked
+uv run fhir-query-rl validate data/synthetic-hospital-v0.4.0 --split dev --discovery-variants
+uv run pytest tests -q
 ```
+
+The root is a uv workspace with a locked Python 3.13 environment, current Prime
+and native Verifiers v1, W&B and an offline trace viewer. The
+[HiPerGator evaluation guide](docs/hipergator.md) covers **account/QoS `cai6734`**,
+CPU preparation, current vLLM, model presets for GPT-OSS 20B, Muse Glimmer FP8 and
+K2 Horizon 7B FP8, an experimental LFM2.5-24B-A2B preset, optional owned-model
+cleanup and result collection. [Liquid model research](docs/liquid-lfm2-5.md)
+links official GRPO notebooks and explains current training integration gaps.
+[GPT-OSS versus Liquid](docs/gpt-oss-vs-liquid.md) compares published throughput,
+training support and a matched B200 evaluation protocol.
+Training is not launched. Browse native results with
+`uv run python scripts/view_traces.py --outputs-dir outputs/evals`.
 
 - [Environment setup, loader arguments and tool contract](environments/fhir_query_rl/README.md)
 - [Metric definitions and checkpoint analysis](docs/metrics-and-evaluation.md)

@@ -220,7 +220,7 @@ def test_shared_entities_and_environment_profiles(pipeline):
             tool_profile=profile,
             max_examples=2,
         )
-        assert len(env.dataset) == 2
+        assert len(list(env.taskset)) == 2
     assert Counter(t["split"] for t in tasks) == {"train": len(tasks)}
 
 

@@ -1,5 +1,8 @@
 # Tool assistance and controls
 
+For concrete calls and responses, see the [agent tools walkthrough](tools.md).
+Keep its examples and profile membership in sync when tool behavior changes.
+
 The `tool_profile` loader argument has three settings. `raw` exposes the existing FHIR request tool (and optional experimental SQL). `assisted` adds five deterministic helpers to that same interface. Task IDs, charts, gold answers and mutation requirements are identical between raw and assisted when the same filters are used. System instructions differ only to describe the available helpers.
 
 | Helper | Purpose | Boundaries |

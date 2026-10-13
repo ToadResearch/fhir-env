@@ -7,12 +7,19 @@ Environment and corpus **v0.4.0** extend the frozen **v0.3.0 comparison corpus**
 ## Install and verify
 
 ```bash
-uv pip install -e ./environments/fhir_query_rl
-fhir-query-rl validate data/synthetic-hospital-v0.4.0 --split dev --discovery-variants
-python -m pytest tests -q
+uv sync --locked
+uv run fhir-query-rl validate data/synthetic-hospital-v0.4.0 --split dev --discovery-variants
+uv run pytest tests -q
 ```
 
-`fhir-query-rl` is the CLI and distribution name. The Python package is `fhir_query_rl`; the loader is `fhir_query_rl.load_environment`. It uses the legacy Verifiers interface with `verifiers==0.2.2.dev6`. No credentials are needed to construct data, replay reference plans or score.
+Run these from the repository root. The [HiPerGator guide](../../docs/hipergator.md)
+covers CPU-only acquisition, B200 Slurm evaluation, W&B and the local trace
+viewer. The root `uv.lock` is the canonical development dependency lock.
+
+`fhir-query-rl` is the CLI, distribution and taskset ID. The Python package exports
+`FhirTaskset` and `FhirEnv` for **native Verifiers v1**, using current stable
+`verifiers==0.3.1`. Tasks, synchronized state and MCP tools use the typed v1 API.
+No credentials are needed to construct data, replay reference plans or score.
 
 ## Data and task selection
 
@@ -22,12 +29,13 @@ The source expansion has 1,268 patients, 54 resource types and 47,113 instances 
 from fhir_query_rl import load_environment
 
 env = load_environment(
-    data_dir="data/synthetic-hospital-v0.3.0",  # omit for packaged train/dev
-    split="train", eval_split="dev",
+    data_dir="data/synthetic-hospital-v0.4.0",  # omit for packaged train/dev
+    split="dev",
     query_mode="rest", tool_profile="raw",
     discovery_variants=True,
     max_depth=5, efficiency_weight=0.0, retrieval_weight=0.0,
 )
+tasks = list(env.taskset)
 ```
 
 Use `family`, `families`, `domains`, `roles`, `crud`, `max_depth` and `max_examples` to select cases. `crud="U"` selects tasks requiring updates; it does not remove reads or creates from a mixed workflow. Defaults retain all original CRUD families. `discovery_variants=true` appends three deterministic discovery families: referral closure, acknowledgement logging plus Task completion, and authorized draft-claim removal. They retain original mutations and add retrieved answer/evidence fields. They add 838 train / 89 dev cases, without generating resources or modifying original task files.
@@ -35,6 +43,10 @@ Use `family`, `families`, `domains`, `roles`, `crud`, `max_depth` and `max_examp
 Each row's `info` contains task/patient identity, split, family, declared retrieval hops, difficulty bin, workflow depth, CRUD mix, required evidence count, mutation entries, transaction requirement and reference calls. Gold answers and mutation contracts remain outside agent-visible tools. Difficulty bins are 1/easy, 2/medium, 3/hard and 4+/very_hard. Declared dependencies are not proven minimum API calls.
 
 ## Tool contract
+
+The [agent tools walkthrough](../../docs/tools.md) shows fictional requests, calls,
+responses and a complete retrieval-and-update path. Update it alongside changes
+to this contract or the exposed tools.
 
 `fhir_request(method, path, body_json="", headers_json="")` supports relative GET search/read, POST create, PUT replacement, DELETE and POST empty path for atomic transaction Bundles. Search returns a FHIR searchset Bundle. Read/write responses have ETags. Updates/deletes require current If-Match; creates get server IDs. There is no upsert or PATCH. Conditional create supports idempotency. Transactions contain 1–20 primitive write entries and roll back on failure. Deletion is confined to explicitly authorized unreferenced duplicate drafts.
 
@@ -52,13 +64,37 @@ Final responses contain exactly `answer` and `evidence`. Strict success requires
 
 Default reward is strict success with `retrieval_weight=0` and `efficiency_weight=0`. Optional shaping is bounded to retrieval weight ≤0.2 and efficiency weight ≤0.15; it never changes the independently reported strict success metric. Query length, novelty, helper use and apparent sophistication receive no reward.
 
-`answer_mode="json_or_fence"` optionally accepts exactly one JSON code fence containing the response. Prose plus a fence, duplicate keys and non-JSON numeric constants are rejected. Formatting and workflow correctness have separate metrics. `tool_protocol="json_action"` provides the same tools through validated JSON commands when native function calls are unavailable. It remains tool access, even though provider API tool definitions are empty. `demonstrations=true` adds fixed fictional examples that are excluded from episode evidence and turn counters. Native tools and strict JSON remain defaults.
+`answer_mode="json_or_fence"` optionally accepts exactly one JSON code fence containing the response. Prose plus a fence, duplicate keys and non-JSON numeric constants are rejected. Formatting and workflow correctness have separate metrics. Tools use native MCP/function calls; there is no legacy JSON-action transport.
 
 Resources pass official R4 4.0.1 JSON schema, nested definition-derived contracts and local graph/workflow checks. Every compiled reference task is replayed before a new snapshot is published locally. Complete dev chart bundles also passed independent base R4 structural/FHIRPath validation with terminology disabled; warnings remain. US Core, independent-server execution and clinical conformance are separate checks. See [generation and results](../../docs/generation-pipeline.md).
 
 ## Evaluation records
 
-Save `info`, `trajectory`, `fhir_metrics`, `fhir_trace` and `fhir_assistance` for each evaluation rollout. The rubric exposes correctness, retrieval, mutation, search-behavior, structured query and token-usage metrics. Model tokens sum actual `Response.usage` values across calls; repeated input context contributes to input totals. Missing usage is -1 with separate coverage and observed partial totals. Reasoning tokens are already included in completion totals and are not added again.
+Current evaluation automatically writes native Episodes to `traces.jsonl`. Each
+episode contains its task and `traces`: message-graph `nodes`, actual model
+`calls`, weighted `rewards`, and `metrics`. FHIR evidence/events and helper records
+are saved in `trace.info.fhir_trace` and `trace.info.fhir_assistance`. The mutable
+chart state is isolated per episode and is not included in saved trace state.
+Scoring requires that live state; offline replay cannot reconstruct mutations
+from an answer alone. Model-token metrics sum actual call usage, including cached
+input tokens; missing usage is -1 with explicit coverage. Reasoning tokens are
+already included in completion totals and are not added again.
+
+Use the current local CLI with a running OpenAI-compatible server:
+
+```bash
+uv run eval fhir-query-rl -m openai/gpt-oss-20b -n 32 -r 1 -c 32 \
+  --client.base-url http://127.0.0.1:8000/v1 --client.api-key-var LOCAL_API_KEY \
+  --env.taskset.data-dir data/synthetic-hospital-v0.4.0 --env.taskset.split dev \
+  --no-push --no-serve -o outputs/evals
+uv run python scripts/view_traces.py --outputs-dir outputs/evals
+```
+
+The exported environment defaults to the native `fhir-locked-harness` plugin with
+subprocess execution. It runs Verifiers' unchanged null tool loop using the
+locked client interpreter, without installing script dependencies during a GPU
+rollout. Dataset selection is under `--env.taskset.*`, execution/scoring knobs
+under `--env.taskset.task.*`, and turns under `--env.agent.max-turns`.
 
 First/all evidence counters use -1 for unobserved outcomes, accompanied by censoring/applicability flags. Prompt-supplied charts have access at round zero. Helpers expose separate visible and backend resource counts. Query structure is measured only for retrieval operations, not write payloads.
 
@@ -73,4 +109,6 @@ python scripts/analyze_query_experiments.py RECORDED_ROLLOUTS.jsonl \
   --output artifacts/query-evaluation --plots
 ```
 
-The native PrimeRL recipe in `configs/prime-rl.toml` is retained for future work. Full trainer-schema/GPU validation and dedicated hosted eligibility remain pending. Environment dispatch, paid training, Hugging Face uploads and Hub publication are outside the current benchmark-design revision. Resolve derivative licensing and retain source notices before eventual publication.
+Current work evaluates existing models. Training configurations will be added
+against the current API when training resumes. Hugging Face uploads and Hub
+publication are separate steps; retain source notices before eventual publication.

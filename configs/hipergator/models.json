@@ -1,0 +1,27 @@
+{
+  "gpt-oss-20b": {
+    "model": "openai/gpt-oss-20b",
+    "serve_args": ["--tool-call-parser", "openai", "--enable-auto-tool-choice"],
+    "sampling": {"temperature": 1.0, "top_p": 0.95, "reasoning_effort": "medium"}
+  },
+  "glimmer": {
+    "model": "RedHatAI/Muse-Glimmer-30B-FP8-block",
+    "template_model": "meta-models/Muse-Glimmer-30B",
+    "assistant_model": "meta-models/Muse-Glimmer-30B-assistant",
+    "serve_args": ["--reasoning-parser", "muse_glimmer", "--tool-call-parser", "muse_glimmer", "--enable-auto-tool-choice", "--language-model-only"],
+    "sampling": {"temperature": 1.0, "top_p": 0.95, "top_k": 64, "chat_template_kwargs": {"reasoning_strength": "medium"}}
+  },
+  "k2-horizon-7b": {
+    "model": "IFM/K2-Horizon-7B-FP8",
+    "serve_args": ["--trust-remote-code", "--chat-template-content-format", "string", "--reasoning-parser", "k2_horizon", "--tool-call-parser", "k2_horizon", "--enable-auto-tool-choice"],
+    "sampling": {"temperature": 1.0, "top_p": 0.95, "chat_template_kwargs": {"reasoning_effort": "medium"}}
+  },
+  "lfm2-5-24b-a2b": {
+    "model": "LiquidAI/LFM2.5-24B-A2B",
+    "status": "experimental-evaluation",
+    "prefix_caching": false,
+    "max_num_seqs": 32,
+    "serve_args": ["--reasoning-parser", "qwen3", "--tool-call-parser", "lfm2", "--enable-auto-tool-choice"],
+    "sampling": {"temperature": 0.1, "top_k": 50, "repetition_penalty": 1.05}
+  }
+}

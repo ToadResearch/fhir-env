@@ -12,5 +12,9 @@ training_data/
 .prime/
 dist/
 .env
+.env.*
+!.env.example
+outputs/
+.hpg-cache/
 *.log
 .DS_Store

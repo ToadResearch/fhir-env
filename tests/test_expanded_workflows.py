@@ -278,7 +278,8 @@ def test_loader_domain_role_crud_filters(expanded):
     env = load_environment(
         data_dir=root, domains=["scheduling"], crud="U", max_examples=2
     )
-    assert len(env.dataset) == 2
-    assert all(t.get("domain") == "scheduling" for t in env.task_index.values())
+    tasks = list(env.taskset)
+    assert len(tasks) == 2
+    assert all(t.data.case.get("domain") == "scheduling" for t in tasks)
     with pytest.raises(ValueError, match="crud must"):
         load_environment(data_dir=root, crud="X")

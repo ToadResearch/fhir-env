@@ -191,6 +191,26 @@ class FhirError(Exception):
 
 
 class FhirStore:
+    _SNAPSHOT_SETS = {"deleted", "observed_terms", "seen", "writable_types", "delete_refs", "writable_refs"}
+
+    def snapshot(self):
+        """JSON-safe complete episode state for the native MCP state channel."""
+        result = copy.deepcopy(self.__dict__)
+        for key in self._SNAPSHOT_SETS:
+            result[key] = sorted(result[key])
+        result["exposed"] = {key: sorted(fields) for key, fields in result["exposed"].items()}
+        return result
+
+    @classmethod
+    def from_snapshot(cls, snapshot):
+        """Restore an isolated store without sharing mutable data with its snapshot."""
+        store = cls.__new__(cls)
+        store.__dict__.update(copy.deepcopy(snapshot))
+        for key in cls._SNAPSHOT_SETS:
+            store.__dict__[key] = set(store.__dict__[key])
+        store.exposed = {key: set(fields) for key, fields in store.exposed.items()}
+        return store
+
     def __init__(
         self,
         resources,
