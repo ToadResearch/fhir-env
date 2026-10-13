@@ -238,13 +238,18 @@ define these surfaces. Evaluation uploads are explicitly disabled.
 The viewer discovers native results directly from `outputs/hipergator/` (or
 `outputs/`), as well as collected results from `outputs/evals/`. It scans campaign
 evaluation directories without traversing their environments or model caches.
-After CPU preparation completes, open it on HiPerGator using any prepared
-campaign's interpreter; replace `CAMPAIGN` with its actual directory name:
+After CPU preparation completes, open it directly on HiPerGator:
 
 ```bash
-outputs/hipergator/CAMPAIGN/client-venv/bin/python scripts/view_traces.py \
-  --outputs-dir outputs/hipergator
+./scripts/view_traces.py --outputs-dir outputs/hipergator
 ```
+
+The script uses Textual from the current interpreter if installed. Otherwise it
+automatically finds a working root `.venv` or a prepared campaign's `client-venv`
+and relaunches itself there. No activation or manual environment path is needed;
+it does not install packages or download anything on the login node. If no
+environment is ready, it tells you to wait for CPU preparation. The run list
+lets you select among all discovered model/campaign results.
 
 This is a lightweight offline terminal UI, not GPU inference. Restart it to
 reload traces written since it opened. Use `r` to focus the run list, `t` to

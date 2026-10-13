@@ -4,7 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
+import os
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, ClassVar
@@ -13,6 +17,54 @@ MAX_FILE_BYTES = 256 * 1024 * 1024
 MAX_LINE_BYTES = 16 * 1024 * 1024
 MAX_EPISODES = 100_000
 MAX_RUNS = 500
+
+
+def viewer_interpreters(repo: Path, directory: Path) -> list[Path]:
+    """Find existing client environments; never create or install one here."""
+    candidates = [repo / ".venv" / "bin" / "python"]
+    roots = [repo / "outputs" / "hipergator", directory, *list(directory.parents)[:3]]
+    for root in dict.fromkeys(roots):
+        if (root / "plan.json").is_file():
+            candidates.append(root / "client-venv" / "bin" / "python")
+        # Only enumerate immediate campaigns, not their environments or caches.
+        try:
+            for campaign in sorted(root.iterdir(), reverse=True):
+                if (
+                    campaign.is_dir()
+                    and not campaign.is_symlink()
+                    and (campaign / "plan.json").is_file()
+                ):
+                    candidates.append(campaign / "client-venv" / "bin" / "python")
+        except OSError:
+            continue
+    return list(dict.fromkeys(candidates))
+
+
+def ensure_viewer_runtime(directory: Path) -> None:
+    """Reuse installed Textual or re-exec in a prepared project environment."""
+    if importlib.util.find_spec("textual") is not None:
+        return
+    script = Path(__file__).resolve()
+    for python in viewer_interpreters(script.parents[1], directory.resolve()):
+        if not python.is_file() or not os.access(python, os.X_OK):
+            continue
+        try:
+            probe = subprocess.run(
+                [str(python), "-I", "-c", "import textual.app, textual.widgets"],
+                capture_output=True,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+        if probe.returncode == 0:
+            print(f"Using viewer environment: {python.parent.parent}", file=sys.stderr)
+            os.execv(str(python), [str(python), "-I", str(script), *sys.argv[1:]])
+    raise SystemExit(
+        "No installed viewer environment found. On HiPerGator, wait for a CPU "
+        "preparation job to finish. For local use, run uv sync --locked first. "
+        "The viewer does not install dependencies or download models."
+    )
 
 
 def pretty(value: Any) -> str:
@@ -324,7 +376,7 @@ def make_app(runs: list[Run]):
                 self.select_run(0)
             else:
                 self.query_one("#status", Static).update(
-                    "No native traces.jsonl found (scan depth: two child levels)."
+                    "No native traces.jsonl found in the selected output directory."
                 )
 
         def select_run(self, index: int) -> None:
@@ -382,6 +434,7 @@ def main() -> None:
     args = parser.parse_args()
     if not args.outputs_dir.is_dir():
         parser.error(f"Outputs directory does not exist: {args.outputs_dir}")
+    ensure_viewer_runtime(args.outputs_dir)
     make_app(discover_runs(args.outputs_dir)).run()
 
 

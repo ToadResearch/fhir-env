@@ -59,6 +59,64 @@ def write_run(path, episodes):
     return trace
 
 
+def test_viewer_interpreters_find_project_and_selected_external_campaign(tmp_path):
+    repo = tmp_path / "repo"
+    standard = repo / "outputs" / "hipergator" / "standard-run"
+    external = tmp_path / "external-run"
+    for campaign in (standard, external):
+        (campaign / "evals" / "model").mkdir(parents=True)
+        (campaign / "plan.json").write_text("{}")
+    candidates = viewer.viewer_interpreters(repo, external / "evals" / "model")
+    assert candidates[0] == repo / ".venv" / "bin" / "python"
+    assert standard / "client-venv" / "bin" / "python" in candidates
+    assert external / "client-venv" / "bin" / "python" in candidates
+    assert len(candidates) == len(set(candidates))
+
+
+def test_viewer_runtime_reuses_current_textual_without_probing(tmp_path, monkeypatch):
+    monkeypatch.setattr(viewer.importlib.util, "find_spec", lambda name: object())
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError("No environment probing is needed")
+
+    monkeypatch.setattr(viewer.subprocess, "run", unexpected)
+    viewer.ensure_viewer_runtime(tmp_path)
+
+
+def test_viewer_runtime_skips_broken_environment_and_reexecs(tmp_path, monkeypatch):
+    pytest.importorskip("textual")
+    broken = tmp_path / "broken-python"
+    broken.write_text("#!/bin/sh\nexit 1\n")
+    broken.chmod(0o755)
+    working = Path(sys.executable)
+    monkeypatch.setattr(viewer.importlib.util, "find_spec", lambda name: None)
+    monkeypatch.setattr(viewer, "viewer_interpreters", lambda *args: [broken, working])
+    arguments = ["view_traces.py", "--outputs-dir", str(tmp_path)]
+    monkeypatch.setattr(viewer.sys, "argv", arguments)
+    executed = []
+
+    def capture_exec(python, argv):
+        executed.append((python, argv))
+        raise SystemExit("reexec")
+
+    monkeypatch.setattr(viewer.os, "execv", capture_exec)
+    with pytest.raises(SystemExit, match="reexec"):
+        viewer.ensure_viewer_runtime(tmp_path)
+    assert executed == [
+        (
+            str(working),
+            [str(working), "-I", str(Path(viewer.__file__).resolve()), *arguments[1:]],
+        )
+    ]
+
+
+def test_viewer_runtime_explains_missing_environment(tmp_path, monkeypatch):
+    monkeypatch.setattr(viewer.importlib.util, "find_spec", lambda name: None)
+    monkeypatch.setattr(viewer, "viewer_interpreters", lambda *args: [])
+    with pytest.raises(SystemExit, match="wait for a CPU preparation job"):
+        viewer.ensure_viewer_runtime(tmp_path)
+
+
 def test_native_evidence_and_weighted_reward(tmp_path):
     run = viewer.load_run(write_run(tmp_path / "run", [episode()]))
     assert not run.warnings
