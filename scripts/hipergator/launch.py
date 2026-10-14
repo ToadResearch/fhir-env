@@ -44,6 +44,7 @@ def parser():
     p.add_argument("--cpu-time", default="04:00:00")
     p.add_argument("--gpu-time", default="02:00:00")
     p.add_argument("--num-examples", type=int, default=32)
+    p.add_argument("--rollouts-per-example", type=int, default=1)
     p.add_argument("--concurrency", type=int, default=32)
     p.add_argument(
         "--max-num-seqs",
@@ -78,6 +79,7 @@ def make_plan(args, repo):
     if (
         min(
             args.num_examples,
+            args.rollouts_per_example,
             args.concurrency,
             args.max_depth,
             args.max_turns,

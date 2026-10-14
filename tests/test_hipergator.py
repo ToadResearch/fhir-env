@@ -359,3 +359,15 @@ def test_finalizer_cannot_claim_missing_evaluation_success(
     assert (
         json.loads((run / "receipts/finished.json").read_text())["status"] == "failed"
     )
+
+
+def test_multiple_rollouts_config(modules, tmp_path):
+    cfg = plan(
+        modules, tmp_path, "--num-examples", "32", "--rollouts-per-example", "10"
+    )
+    evaluation = modules["common"].eval_config(cfg, 8000)
+    assert evaluation["num_tasks"] == 32
+    assert evaluation["num_rollouts"] == 10
+    assert evaluation["env"]["taskset"]["max_examples"] == 32
+    with pytest.raises(ValueError):
+        plan(modules, tmp_path, "--rollouts-per-example", "0")

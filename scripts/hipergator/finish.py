@@ -88,10 +88,9 @@ def main():
         traces = sorted((run / "evals").glob("*/traces.jsonl"))
         summary = summarize(traces)
         receipt.update(summary)
-        if (
-            gpu.get("status") == "completed"
-            and summary["episodes"] != plan["num_examples"]
-        ):
+        if gpu.get("status") == "completed" and summary["episodes"] != plan[
+            "num_examples"
+        ] * plan.get("rollouts_per_example", 1):
             raise RuntimeError("Completed evaluation has an unexpected episode count")
         if plan["wandb_mode"] == "online" and summary["episodes"]:
             load_secrets(Path(plan["repo"]))
@@ -110,6 +109,7 @@ def main():
                         "tool_profile",
                         "query_mode",
                         "num_examples",
+                        "rollouts_per_example",
                         "max_depth",
                     )
                 },

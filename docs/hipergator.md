@@ -340,6 +340,31 @@ environments and credentials are excluded. All generated outputs/caches are
 Git-ignored. W&B receives CPU-aggregated evaluation metrics; complete traces stay
 local for inspection.
 
+### Bundle a completed four-model batch for review
+
+Use an explicit shared prefix when submitting, for example
+`--run-dir "outputs/hipergator/${batch}-${preset}"`. After all four evaluations
+finish, run this on HiPerGator from the repository root:
+
+```bash
+python3 scripts/bundle_hipergator_results.py \
+  --batch "$batch" --output "outputs/${batch}-review.zip"
+```
+
+If using a new shell, set `batch` to that submission's exact prefix first.
+The exporter requires a completed receipt and nonempty native traces for every
+model. Episode counts must match both the requested count and finished receipt.
+It then verifies the ZIP's checksums and archived episode counts before publishing
+it. A newer cancelled submission cannot replace a completed run by accident:
+there is no automatic “latest folder” selection.
+
+The ZIP includes plans, traces, metrics, logs and receipts, with a manifest of
+episode counts and SHA-256 hashes. Models, datasets, environments and credential
+files are excluded. This is an analysis bundle, not a full backup. Existing
+archives are never overwritten, and **source folders are always retained**;
+there is no cleanup option. Keep the original results until the downloaded
+archive has been opened and its rollouts reviewed.
+
 ## Cache retention and validation
 
 Models are reused in `.hpg-cache/models/` and the SIF in `.hpg-cache/images/`.
@@ -366,3 +391,25 @@ configuration completeness; it does not exercise container inference or validate
 B200 execution. In the first cluster retry, the explicit CPU CLI preflight passed
 for all four presets; preparation then exposed the missing production `tomlkit`
 dependency, now declared in `pyproject.toml` and `uv.lock`.
+
+## Multiple rollouts per example
+
+Add `--rollouts-per-example 10` to the submission command. With
+`--num-examples 32`, this evaluates the same 32 tasks ten times independently:
+320 episodes per model, or 1,280 across four models. The native Verifiers config
+uses `num_tasks=32` and `num_rollouts=10`; each episode starts with its own chart
+state. Concurrency still limits simultaneous episodes, so ten repeats do not
+require ten GPUs. Expect substantially more runtime than a single rollout.
+
+`./scripts/vtrace` groups attempts by task key even when they finish interleaved.
+A row such as `#3.7  4/10` means example 3, attempt 7, with four correct results
+among ten recorded attempts. Selecting a row opens that attempt's own request,
+answer, tool calls and scores. Attempt numbers reflect file order, not seeds.
+The run summary distinguishes rollout correctness from the number of examples
+with at least one correct attempt; that latter count is not single-attempt
+accuracy. While a run is incomplete, per-example counts cover recorded attempts
+only. Completion and export checks expect `examples × rollouts` episodes.
+
+This follows the historical Verifiers TUI's distinction between examples and
+rollout records (its expected record count was also their product), while retaining
+native v1 traces. The viewer does not collapse repeated attempts into one result.

@@ -90,7 +90,7 @@ def eval_config(plan, port):
     return {
         "model": plan["profile"]["model"],
         "num_tasks": plan["num_examples"],
-        "num_rollouts": 1,
+        "num_rollouts": plan.get("rollouts_per_example", 1),
         "max_concurrent": plan["concurrency"],
         "push": False,
         "output_dir": str(Path(plan["run_dir"]) / "evals"),

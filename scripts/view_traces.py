@@ -134,6 +134,9 @@ def load_campaign(campaign: Path, trace: Path | None = None) -> Run:
     }
     profile = plan.get("profile", {})
     requested = plan.get("num_examples")
+    repeats = plan.get("rollouts_per_example", 1)
+    if isinstance(requested, int) and isinstance(repeats, int) and repeats > 0:
+        requested *= repeats
     run.requested = requested if isinstance(requested, int) and requested > 0 else None
     run.model = (
         str(profile.get("model", plan.get("preset", "Unknown")))
@@ -515,6 +518,29 @@ def task_key(episode: dict) -> str:
     return str(episode.get("task", {}).get("key") or episode.get("id", "unnamed"))
 
 
+def grouped_attempts(run: Run) -> list[tuple[int, int, int, int, int]]:
+    """Original episode index, example number, attempt, observed attempts, correct."""
+    groups = {}
+    for index, episode in enumerate(run.episodes):
+        groups.setdefault(task_key(episode), []).append(index)
+    rows = []
+    for example, indices in enumerate(groups.values(), 1):
+        correct = sum(outcome(run.episodes[i]) == "Correct" for i in indices)
+        for attempt, index in enumerate(indices, 1):
+            rows.append((index, example, attempt, len(indices), correct))
+    return rows
+
+
+def example_summary(run: Run) -> str:
+    groups = {}
+    for episode in run.episodes:
+        groups.setdefault(task_key(episode), []).append(outcome(episode))
+    solved = sum("Correct" in results for results in groups.values())
+    return (
+        f"{len(groups)} examples observed · {solved} with at least one correct rollout"
+    )
+
+
 def episode_identity(episode: dict) -> str:
     # Several rollouts can share a task key.
     return str(episode.get("id") or task_key(episode))
@@ -756,7 +782,7 @@ def make_app(runs: list[Run], reload_runs=None):
         .label {height: 1; color: $text-muted; text-style: bold; margin-top: 1;}
         #models {height: 1fr;}
         #runs {height: 8;}
-        #status {height: 4; padding: 0 1; background: $boost;}
+        #status {height: 5; padding: 0 1; background: $boost;}
         #body {height: 1fr; margin-top: 1;}
         #task-pane {width: 39; border-right: solid $primary-darken-2; padding-right: 1;}
         #tasks {height: 1fr;}
@@ -839,7 +865,7 @@ def make_app(runs: list[Run], reload_runs=None):
             )
             tasks = self.query_one("#tasks", DataTable)
             tasks.add_column("Result", width=9)
-            tasks.add_column("Task", width=16)
+            tasks.add_column("Example/try ✓", width=18)
             tasks.add_column("Calls", width=4)
             self.populate_models()
             self.action_focus_runs()
@@ -940,7 +966,7 @@ def make_app(runs: list[Run], reload_runs=None):
             observed = len(run.episodes)
             scored = counts["Correct"] + counts["Incorrect"]
             rate = (
-                f" · {counts['Correct'] / scored:.0%} of scored tasks"
+                f" · {counts['Correct'] / scored:.0%} of scored rollouts"
                 if scored
                 else " · no correctness scores yet"
             )
@@ -957,8 +983,9 @@ def make_app(runs: list[Run], reload_runs=None):
                 else " · token usage not recorded"
             )
             self.query_one("#status", Static).update(
-                f"{model_id(run)} · {run.status} · {observed}/{total or '—'} recorded\n"
+                f"{model_id(run)} · {run.status} · {observed}/{total or '—'} rollouts recorded\n"
                 f"Correct {counts['Correct']} · incorrect {counts['Incorrect']} · errors {counts['Error']} · unscored {counts['Unscored']}{rate}\n"
+                f"{example_summary(run)}\n"
                 f"{cost} · load warnings: {len(run.warnings)}\n"
                 "Correct = workflow_success (strict_success fallback). Missing tasks are not scored."
             )
@@ -990,7 +1017,8 @@ def make_app(runs: list[Run], reload_runs=None):
             table = self.query_one("#tasks", DataTable)
             table.clear()
             self.visible_tasks = []
-            for i, episode in enumerate(run.episodes):
+            for i, example, attempt, attempts, correct in grouped_attempts(run):
+                episode = run.episodes[i]
                 result = outcome(episode)
                 if filter_value != "All" and result != filter_value:
                     continue
@@ -1005,10 +1033,7 @@ def make_app(runs: list[Run], reload_runs=None):
                 ):
                     continue
                 self.visible_tasks.append(i)
-                family = task_family(episode)
-                label = f"{i + 1}. " + (
-                    family if family != "Task" else task_key(episode)[:18]
-                )
+                label = f"#{example}.{attempt}  {correct}/{attempts}"
                 table.add_row(
                     Text(result, style=colors[result]),
                     Text(label),
@@ -1039,7 +1064,11 @@ def make_app(runs: list[Run], reload_runs=None):
             self.selected_episode = index
             run = runs[self.selected_run]
             episode = run.episodes[index]
+            _, example, attempt, attempts, correct = next(
+                row for row in grouped_attempts(run) if row[0] == index
+            )
             self.query_one("#content-0", Static).update(
+                f"Example #{example} · rollout {attempt}/{attempts} recorded · {correct}/{attempts} correct\n"
                 f"{outcome(episode).upper()} · {task_family(episode)}\nID: {task_key(episode)}\n\n"
                 f"REQUEST\n{bounded(task_prompt(episode), self.expanded)}\n\n"
                 f"FINAL ANSWER\n{bounded(final_text(episode), self.expanded)}"

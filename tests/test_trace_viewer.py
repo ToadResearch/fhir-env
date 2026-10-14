@@ -561,3 +561,42 @@ async def test_narrow_and_empty_viewers_can_refresh(tmp_path):
         await pilot.pause()
         assert app.query_one("#tasks", DataTable).row_count == 1
         assert app.query_one("#compact-model", Select).value == "new-model"
+
+
+def test_repeated_attempts_group_interleaved_episodes(tmp_path):
+    a1, b1, a2 = episode("a"), episode("b"), episode("a")
+    a1["id"], b1["id"], a2["id"] = "a-first", "b-first", "a-second"
+    run = viewer.Run(tmp_path / "traces.jsonl", episodes=[a1, b1, a2])
+    rows = viewer.grouped_attempts(run)
+    assert [row[:4] for row in rows] == [(0, 1, 1, 2), (2, 1, 2, 2), (1, 2, 1, 1)]
+    assert "2 examples observed" in viewer.example_summary(run)
+    assert viewer.episode_identity(a1) != viewer.episode_identity(a2)
+
+
+def test_campaign_repeated_rollout_denominator(tmp_path):
+    (tmp_path / "plan.json").write_text(
+        json.dumps(
+            {
+                "num_examples": 32,
+                "rollouts_per_example": 10,
+            }
+        )
+    )
+    run = viewer.load_campaign(tmp_path)
+    assert run.requested == 320
+
+
+@pytest.mark.asyncio
+async def test_repeated_attempt_selection_keeps_distinct_rollouts(tmp_path):
+    from textual.widgets import DataTable
+
+    records = [episode("a"), episode("b"), episode("a")]
+    for i, record in enumerate(records):
+        record["id"] = f"attempt-{i}"
+    app = viewer.make_app([viewer.Run(tmp_path / "traces.jsonl", episodes=records)])
+    async with app.run_test(size=(160, 50)) as pilot:
+        await pilot.pause()
+        assert app.visible_tasks == [0, 2, 1]
+        app.query_one("#tasks", DataTable).move_cursor(row=1)
+        await pilot.pause()
+        assert app.selected_episode == 2
